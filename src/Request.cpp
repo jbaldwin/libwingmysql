@@ -5,6 +5,12 @@
 namespace wing
 {
 
+Request::Request(std::unique_ptr<RequestHandle> request_handle)
+    : m_request_handle(std::move(request_handle))
+{
+
+}
+
 Request::~Request() {
     if(m_request_handle) {
         RequestPool* request_pool = &(*m_request_handle).m_event_loop->m_request_pool;
@@ -31,12 +37,6 @@ auto Request::operator -> () -> RequestHandle*
 auto Request::operator ->() const -> const RequestHandle*
 {
     return m_request_handle.get();
-}
-
-Request::Request(std::unique_ptr<RequestHandle> request_handle)
-    : m_request_handle(std::move(request_handle))
-{
-
 }
 
 } // wing

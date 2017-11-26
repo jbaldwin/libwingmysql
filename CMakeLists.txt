@@ -27,6 +27,9 @@ set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/RequestHandle.h src/RequestHandle.cpp
     inc/wing/RequestPool.h src/RequestPool.cpp
     inc/wing/RequestStatus.h src/RequestStatus.cpp
+    inc/wing/Row.h src/Row.cpp
+    inc/wing/Types.h
+    inc/wing/Value.h src/Value.cpp
     inc/wing/WingMySQL.h src/WingMySQL.cpp
 )
 
@@ -42,7 +45,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     rt
     dl
 )
-
-target_link_libraries(${PROJECT_NAME} PRIVATE /usr/lib64/mysql/libmysqlclient_r.a pthread m  rt dl)
 
 include(examples/CMakeLists.txt)

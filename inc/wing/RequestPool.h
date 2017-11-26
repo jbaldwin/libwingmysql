@@ -41,6 +41,8 @@ private:
     auto returnRequest(
         std::unique_ptr<RequestHandle> request_handle
     ) -> void;
+
+    auto close() -> void;
 };
 
 } // wing

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wing/RequestStatus.h"
+#include "wing/Row.h"
 
 #include <uv.h>
 #include <mysql/mysql.h>
@@ -33,21 +34,25 @@ public:
     auto GetRequestStatus() const -> RequestStatus;
 
     auto SetTimeout(std::chrono::milliseconds timeout) -> void;
+    auto GetTimeout() const -> std::chrono::milliseconds;
     auto SetQuery(const std::string& query) -> void;
     auto GetQuery() const -> const std::string&;
+
+    auto HasError() const -> bool;
+    auto GetError() -> std::string;
+
+    auto GetFieldCount() const -> size_t;
+    auto GetRowCount() const -> size_t;
+    auto GetRows() const -> const std::vector<Row>&;
+
 private:
     RequestHandle(
         EventLoop* event_loop,
         std::chrono::milliseconds timeout,
-        const std::string& query,
-        const std::string& host,
-        uint16_t port,
-        const std::string& user,
-        const std::string& password,
-        const std::string& db,
-        uint64_t client_flags
+        std::string query
     );
 
+    auto connect() -> bool;
     auto start() -> void;
     auto failed(RequestStatus status) -> void;
 
@@ -67,7 +72,12 @@ private:
     std::chrono::milliseconds m_timeout;
     MYSQL m_mysql;
     MYSQL_RES* m_result;
+    mutable bool m_parsed_result;
+    size_t m_field_count;
+    size_t m_row_count;
+    mutable std::vector<Row> m_rows;
     bool m_is_connected;
+    bool m_had_error;
 
     RequestStatus m_request_status;
     std::string m_query;

@@ -3,14 +3,16 @@
 namespace wing
 {
 
-const std::string REQUEST_STATUS_UNKNOWN        = "UNKNOWN";
-const std::string REQUEST_STATUS_BUILDING       = "BUILDING";
-const std::string REQUEST_STATUS_EXECUTING      = "EXECUTING";
-const std::string REQUEST_STATUS_SUCCESS        = "SUCCESS";
-const std::string REQUEST_STATUS_WRITE_FAILURE  = "WRITE_FAILURE";
-const std::string REQUEST_STATUS_READ_FAILURE   = "READ_FAILURE";
-const std::string REQUEST_STATUS_TIMEOUT        = "TIMEOUT";
-const std::string REQUEST_STATUS_DISCONNECT     = "DISCONNECT";
+const std::string REQUEST_STATUS_UNKNOWN              = "UNKNOWN";
+const std::string REQUEST_STATUS_BUILDING             = "BUILDING";
+const std::string REQUEST_STATUS_EXECUTING            = "EXECUTING";
+const std::string REQUEST_STATUS_CONNECT_FAILURE      = "CONNECT_FAILURE";
+const std::string REQUEST_STATUS_SUCCESS              = "SUCCESS";
+const std::string REQUEST_STATUS_WRITE_FAILURE        = "WRITE_FAILURE";
+const std::string REQUEST_STATUS_READ_FAILURE         = "READ_FAILURE";
+const std::string REQUEST_STATUS_TIMEOUT              = "TIMEOUT";
+const std::string REQUEST_STATUS_DISCONNECT           = "DISCONNECT";
+const std::string REQUEST_STATUS_SHUTDOWN_IN_PROGRESS = "SHUTDOWN_IN_PROGRESS";
 
 auto request_status2str(
     RequestStatus status
@@ -24,6 +26,8 @@ auto request_status2str(
             return REQUEST_STATUS_EXECUTING;
         case RequestStatus::SUCCESS:
             return REQUEST_STATUS_SUCCESS;
+        case RequestStatus::CONNECT_FAILURE:
+            return REQUEST_STATUS_CONNECT_FAILURE;
         case RequestStatus::WRITE_FAILURE:
             return REQUEST_STATUS_WRITE_FAILURE;
         case RequestStatus::READ_FAILURE:
@@ -32,6 +36,8 @@ auto request_status2str(
             return REQUEST_STATUS_TIMEOUT;
         case RequestStatus::DISCONNECT:
             return REQUEST_STATUS_DISCONNECT;
+        case RequestStatus::SHUTDOWN_IN_PROGRESS:
+            return REQUEST_STATUS_SHUTDOWN_IN_PROGRESS;
         default:
             return REQUEST_STATUS_UNKNOWN;
     }

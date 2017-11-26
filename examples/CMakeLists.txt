@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(libwingmysql_examples)
 
+message("MYSQL_CLIENT (examples) = ${MYSQL_CLIENT}")
+
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 ### synch_simple ###

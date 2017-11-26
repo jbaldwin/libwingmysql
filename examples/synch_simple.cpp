@@ -9,6 +9,30 @@ public:
     {
         std::cout << "Finished query: " << request->GetQuery() << std::endl;
         std::cout << wing::request_status2str(request->GetRequestStatus()) << "\n";
+        if(request->HasError())
+        {
+            std::cout << "Error: " << request->GetError() << "\n";
+        }
+        else
+        {
+            std::cout << "Fields count: " << request->GetFieldCount() << "\n";
+            std::cout << "Row count: " << request->GetRowCount() << "\n";
+            for(const auto& row : request->GetRows())
+            {
+                for(const auto& value : row.GetValues())
+                {
+                    if(value.IsNull())
+                    {
+                        std::cout << "NULL ";
+                    }
+                    else
+                    {
+                        std::cout << value.AsString() << " ";
+                    }
+                }
+                std::cout << "\n";
+            }
+        }
     }
 };
 
@@ -49,7 +73,7 @@ int main(int argc, char* argv[])
     event_loop.StartRequest(std::move(request));
 
     std::this_thread::sleep_for(1000ms);
-    while(event_loop.GetActiveRequestCount() > 0)
+    while(event_loop.GetActiveQueryCount() > 0)
     {
         std::this_thread::sleep_for(100ms);
     }

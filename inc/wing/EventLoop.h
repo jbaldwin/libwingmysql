@@ -40,31 +40,26 @@ public:
 
     auto IsRunning() -> bool;
 
-    auto GetActiveRequestCount() const -> uint64_t;
+    auto GetActiveQueryCount() const -> uint64_t;
 
     auto Stop() -> void;
 
     auto GetRequestPool() -> RequestPool&;
 
-    auto StartRequest(
-        Request request
-    ) -> bool;
+    auto StartRequest(Request request) -> bool;
 
     auto GetRequestCallback() -> IRequestCallback&;
     auto GetRequestCallback() const -> const IRequestCallback&;
 
 private:
-
     RequestPool m_request_pool;
 
-    std::atomic<bool> m_is_running;
+    std::atomic<bool> m_is_query_running;
+    std::atomic<bool> m_is_connect_running;
     std::atomic<bool> m_is_stopping;
-    std::atomic<uint64_t> m_active_request_count;
+    std::atomic<uint64_t> m_active_query_count;
 
     std::unique_ptr<IRequestCallback> m_request_callback;
-
-    uv_loop_t* m_loop;
-    uv_async_t m_async;
 
     std::string m_host;
     uint16_t m_port;
@@ -73,15 +68,24 @@ private:
     std::string m_db;
     uint64_t m_client_flags;
 
-    std::mutex m_pending_requests_lock;
-    std::vector<Request> m_pending_requests;
-    std::vector<Request> m_grabbed_requests;
+    std::thread m_background_query_thread;
+    uv_loop_t* m_query_loop;
+    uv_async_t m_query_async;
+    std::atomic<bool> m_query_async_closed;
+    std::mutex m_pending_query_requests_lock;
+    std::vector<Request> m_pending_query_requests;
+    std::vector<Request> m_grabbed_query_requests;
 
-    std::thread m_background_thread;
+    std::thread m_background_connect_thread;
+    uv_loop_t* m_connect_loop;
+    uv_async_t m_connect_async;
+    std::atomic<bool> m_connect_async_closed;
+    std::mutex m_pending_connect_requests_lock;
+    std::vector<Request> m_pending_connect_requests;
+    std::vector<Request> m_grabbed_connect_requests;
 
-    std::atomic<bool> m_async_closed;
-
-    auto run() -> void;
+    auto run_queries() -> void;
+    auto run_connect() -> void;
 
     auto onClose(
         uv_handle_t* handle
@@ -97,7 +101,11 @@ private:
         uv_timer_t* handle
     ) -> void;
 
-    auto requestsAcceptAsync(
+    auto requestsAcceptForQueryAsync(
+        uv_async_t* async
+    ) -> void;
+
+    auto requestsAcceptForConnectAsync(
         uv_async_t* async
     ) -> void;
 
@@ -122,7 +130,11 @@ private:
         uv_timer_t* handle
     ) -> void;
 
-    friend auto requests_accept_async(
+    friend auto requests_accept_for_query_async(
+        uv_async_t* async
+    ) -> void;
+
+    friend auto requests_accept_for_connect_async(
         uv_async_t* async
     ) -> void;
 

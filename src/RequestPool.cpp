@@ -16,11 +16,7 @@ RequestPool::RequestPool(
 
 RequestPool::~RequestPool()
 {
-    for(auto& request_handle : m_requests)
-    {
-        auto* raw = request_handle.release();
-        raw->close();
-    }
+
 }
 
 auto RequestPool::Produce(
@@ -36,13 +32,7 @@ auto RequestPool::Produce(
             new RequestHandle(
                 m_event_loop,
                 timeout,
-                query,
-                m_event_loop->m_host,
-                m_event_loop->m_port,
-                m_event_loop->m_user,
-                m_event_loop->m_password,
-                m_event_loop->m_db,
-                m_event_loop->m_client_flags
+                query
             )
         );
 
@@ -67,7 +57,7 @@ auto RequestPool::returnRequest(std::unique_ptr<RequestHandle> request_handle) -
     // simply release the memory cand close it.
     // libuv will shutdown the poll/timer handles
     // and then delete the request handle.
-    if((*request_handle).m_is_connected)
+    if((*request_handle).HasError())
     {
         auto* raw = request_handle.release();
         raw->close();
@@ -75,8 +65,18 @@ auto RequestPool::returnRequest(std::unique_ptr<RequestHandle> request_handle) -
     }
 
     {
+        (*request_handle).freeResult();
         std::lock_guard<std::mutex> guard(m_lock);
         m_requests.emplace_back(std::move(request_handle));
+    }
+}
+
+auto RequestPool::close() -> void
+{
+    for(auto& request_handle : m_requests)
+    {
+        auto* raw = request_handle.release();
+        raw->close();
     }
 }
 

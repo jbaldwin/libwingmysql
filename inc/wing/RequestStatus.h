@@ -10,10 +10,12 @@ enum class RequestStatus
     BUILDING,
     EXECUTING,
     SUCCESS,
+    CONNECT_FAILURE,
     WRITE_FAILURE,
     READ_FAILURE,
     TIMEOUT,
-    DISCONNECT
+    DISCONNECT,
+    SHUTDOWN_IN_PROGRESS
 };
 
 auto request_status2str(
