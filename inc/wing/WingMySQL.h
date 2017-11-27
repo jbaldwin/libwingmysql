@@ -1,11 +1,11 @@
 #pragma once
 
 #include "wing/EventLoop.h"
-#include "wing/IRequestCallback.h"
-#include "wing/Request.h"
-#include "wing/RequestHandle.h"
-#include "wing/RequestPool.h"
-#include "wing/RequestStatus.h"
+#include "wing/IQueryCallback.h"
+#include "wing/Query.h"
+#include "wing/QueryHandle.h"
+#include "wing/QueryPool.h"
+#include "wing/QueryStatus.h"
 
 namespace wing
 {

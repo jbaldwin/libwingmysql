@@ -2,13 +2,13 @@
 
 #include <wing/WingMySQL.h>
 
-class RequestCallback : public wing::IRequestCallback
+class RequestCallback : public wing::IQueryCallback
 {
 public:
-    auto OnComplete(wing::Request request) -> void
+    auto OnComplete(wing::Query request) -> void
     {
         std::cout << "Finished query: " << request->GetQuery() << std::endl;
-        std::cout << wing::request_status2str(request->GetRequestStatus()) << "\n";
+        std::cout << wing::query_status2str(request->GetRequestStatus()) << "\n";
         if(request->HasError())
         {
             std::cout << "Error: " << request->GetError() << "\n";
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         1000ms
     );
 
-    event_loop.StartRequest(std::move(request));
+    event_loop.StartQuery(std::move(request));
 
     std::this_thread::sleep_for(1000ms);
     while(event_loop.GetActiveQueryCount() > 0)

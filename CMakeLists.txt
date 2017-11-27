@@ -22,11 +22,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g -gdwarf-2")
 
 set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/EventLoop.h src/EventLoop.cpp
-    inc/wing/IRequestCallback.h
-    inc/wing/Request.h src/Request.cpp
-    inc/wing/RequestHandle.h src/RequestHandle.cpp
-    inc/wing/RequestPool.h src/RequestPool.cpp
-    inc/wing/RequestStatus.h src/RequestStatus.cpp
+    inc/wing/IQueryCallback.h
+    inc/wing/Query.h src/Query.cpp
+    inc/wing/QueryHandle.h src/QueryHandle.cpp
+    inc/wing/QueryPool.h src/QueryPool.cpp
+    inc/wing/QueryStatus.h src/QueryStatus.cpp
     inc/wing/Row.h src/Row.cpp
     inc/wing/Types.h
     inc/wing/Value.h src/Value.cpp

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "wing/RequestPool.h"
-#include "wing/IRequestCallback.h"
+#include "wing/QueryPool.h"
+#include "wing/IQueryCallback.h"
 
 #include <uv.h>
 
@@ -16,13 +16,13 @@ namespace wing
 
 class EventLoop
 {
-    friend RequestHandle;
-    friend RequestPool;
-    friend Request;
+    friend QueryHandle;
+    friend QueryPool;
+    friend Query;
 
 public:
     EventLoop(
-        std::unique_ptr<IRequestCallback> request_callback,
+        std::unique_ptr<IQueryCallback> query_callback,
         const std::string& host,
         uint16_t port,
         const std::string& user,
@@ -44,22 +44,22 @@ public:
 
     auto Stop() -> void;
 
-    auto GetRequestPool() -> RequestPool&;
+    auto GetRequestPool() -> QueryPool&;
 
-    auto StartRequest(Request request) -> bool;
+    auto StartQuery(Query request) -> bool;
 
-    auto GetRequestCallback() -> IRequestCallback&;
-    auto GetRequestCallback() const -> const IRequestCallback&;
+    auto GetQueryCallback() -> IQueryCallback&;
+    auto GetQueryCallback() const -> const IQueryCallback&;
 
 private:
-    RequestPool m_request_pool;
+    QueryPool m_request_pool;
 
     std::atomic<bool> m_is_query_running;
     std::atomic<bool> m_is_connect_running;
     std::atomic<bool> m_is_stopping;
     std::atomic<uint64_t> m_active_query_count;
 
-    std::unique_ptr<IRequestCallback> m_request_callback;
+    std::unique_ptr<IQueryCallback> m_query_callback;
 
     std::string m_host;
     uint16_t m_port;
@@ -73,16 +73,16 @@ private:
     uv_async_t m_query_async;
     std::atomic<bool> m_query_async_closed;
     std::mutex m_pending_query_requests_lock;
-    std::vector<Request> m_pending_query_requests;
-    std::vector<Request> m_grabbed_query_requests;
+    std::vector<Query> m_pending_query_requests;
+    std::vector<Query> m_grabbed_query_requests;
 
     std::thread m_background_connect_thread;
     uv_loop_t* m_connect_loop;
     uv_async_t m_connect_async;
     std::atomic<bool> m_connect_async_closed;
     std::mutex m_pending_connect_requests_lock;
-    std::vector<Request> m_pending_connect_requests;
-    std::vector<Request> m_grabbed_connect_requests;
+    std::vector<Query> m_pending_connect_requests;
+    std::vector<Query> m_grabbed_connect_requests;
 
     auto run_queries() -> void;
     auto run_connect() -> void;

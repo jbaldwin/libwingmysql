@@ -5,7 +5,7 @@
 namespace wing
 {
 
-enum class RequestStatus
+enum class QueryStatus
 {
     BUILDING,
     EXECUTING,
@@ -18,8 +18,8 @@ enum class RequestStatus
     SHUTDOWN_IN_PROGRESS
 };
 
-auto request_status2str(
-    RequestStatus status
+auto query_status2str(
+    QueryStatus status
 ) -> const std::string&;
 
 } // wing

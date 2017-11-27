@@ -1,10 +1,10 @@
 #include <wing/EventLoop.h>
-#include "wing/RequestPool.h"
+#include "wing/QueryPool.h"
 
 namespace wing
 {
 
-RequestPool::RequestPool(
+QueryPool::QueryPool(
     EventLoop* event_loop
 )
     : m_lock(),
@@ -14,29 +14,29 @@ RequestPool::RequestPool(
 
 }
 
-RequestPool::~RequestPool()
+QueryPool::~QueryPool()
 {
 
 }
 
-auto RequestPool::Produce(
+auto QueryPool::Produce(
     const std::string& query,
     std::chrono::milliseconds timeout
-) -> Request
+) -> Query
 {
     m_lock.lock();
     if(m_requests.empty())
     {
         m_lock.unlock();
         RequestHandlePtr request_handle_ptr(
-            new RequestHandle(
+            new QueryHandle(
                 m_event_loop,
                 timeout,
                 query
             )
         );
 
-        return Request(std::move(request_handle_ptr));
+        return Query(std::move(request_handle_ptr));
     }
     else
     {
@@ -47,11 +47,11 @@ auto RequestPool::Produce(
         (*request_handle_ptr).SetTimeout(timeout);
         (*request_handle_ptr).SetQuery(query);
 
-        return Request(std::move(request_handle_ptr));
+        return Query(std::move(request_handle_ptr));
     }
 }
 
-auto RequestPool::returnRequest(std::unique_ptr<RequestHandle> request_handle) -> void
+auto QueryPool::returnRequest(std::unique_ptr<QueryHandle> request_handle) -> void
 {
     // If the handle has had any kind of error while processing
     // simply release the memory cand close it.
@@ -71,7 +71,7 @@ auto RequestPool::returnRequest(std::unique_ptr<RequestHandle> request_handle) -
     }
 }
 
-auto RequestPool::close() -> void
+auto QueryPool::close() -> void
 {
     for(auto& request_handle : m_requests)
     {

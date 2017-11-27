@@ -12,7 +12,7 @@ auto requests_accept_for_query_async(uv_async_t* async) -> void;
 auto requests_accept_for_connect_async(uv_async_t* async) -> void;
 
 EventLoop::EventLoop(
-    std::unique_ptr<IRequestCallback> request_callback,
+    std::unique_ptr<IQueryCallback> query_callback,
     const std::string& host,
     uint16_t port,
     const std::string& user,
@@ -25,7 +25,7 @@ EventLoop::EventLoop(
       m_is_connect_running(false),
       m_is_stopping(false),
       m_active_query_count(0),
-      m_request_callback(std::move(request_callback)),
+      m_query_callback(std::move(query_callback)),
       m_host(host),
       m_port(port),
       m_user(user),
@@ -140,8 +140,8 @@ auto EventLoop::Stop() -> void
         std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
         for(auto& request : m_pending_query_requests)
         {
-            request->failed(RequestStatus::SHUTDOWN_IN_PROGRESS);
-            (*m_request_callback).OnComplete(std::move(request));
+            request->failed(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            (*m_query_callback).OnComplete(std::move(request));
         }
         m_pending_query_requests.clear();
     }
@@ -150,19 +150,19 @@ auto EventLoop::Stop() -> void
         std::lock_guard<std::mutex> guard(m_pending_connect_requests_lock);
         for(auto& request : m_pending_query_requests)
         {
-            request->failed(RequestStatus::SHUTDOWN_IN_PROGRESS);
-            (*m_request_callback).OnComplete(std::move(request));
+            request->failed(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            (*m_query_callback).OnComplete(std::move(request));
         }
         m_pending_connect_requests.clear();
     }
 }
 
-auto EventLoop::GetRequestPool() -> RequestPool&
+auto EventLoop::GetRequestPool() -> QueryPool&
 {
     return m_request_pool;
 }
 
-auto EventLoop::StartRequest(Request request) -> bool
+auto EventLoop::StartQuery(Query request) -> bool
 {
     // Do not accept new requests if shutting down.
     if(m_is_stopping)
@@ -193,14 +193,14 @@ auto EventLoop::StartRequest(Request request) -> bool
     return true;
 }
 
-auto EventLoop::GetRequestCallback() -> IRequestCallback&
+auto EventLoop::GetQueryCallback() -> IQueryCallback&
 {
-    return *m_request_callback;
+    return *m_query_callback;
 }
 
-auto EventLoop::GetRequestCallback() const -> const IRequestCallback&
+auto EventLoop::GetQueryCallback() const -> const IQueryCallback&
 {
-    return *m_request_callback;
+    return *m_query_callback;
 }
 
 auto EventLoop::run_queries() -> void
@@ -241,7 +241,7 @@ auto EventLoop::onPoll(
     int events
 ) -> void
 {
-    auto* request_handle = static_cast<RequestHandle*>(handle->data);
+    auto* request_handle = static_cast<QueryHandle*>(handle->data);
 
     switch(static_cast<EventLoop::UVPollEvent>(events)) {
         case UVPollEvent::READABLE: {
@@ -250,8 +250,8 @@ auto EventLoop::onPoll(
             request_handle->onRead();
             --m_active_query_count;
             // Regardless of the onRead() result the request is done
-            (*m_request_callback).OnComplete(
-                Request(RequestHandlePtr(request_handle))
+            (*m_query_callback).OnComplete(
+                Query(RequestHandlePtr(request_handle))
             );
         } break;
         case UVPollEvent::WRITEABLE: {
@@ -268,16 +268,16 @@ auto EventLoop::onPoll(
             {
                 --m_active_query_count;
                 // If writing failed, notify the client.
-                (*m_request_callback).OnComplete(
-                    Request(RequestHandlePtr(request_handle))
+                (*m_query_callback).OnComplete(
+                    Query(RequestHandlePtr(request_handle))
                 );
             }
         } break;
         case UVPollEvent::DISCONNECT: {
             request_handle->onDisconnect();
             --m_active_query_count;
-            (*m_request_callback).OnComplete(
-                Request(RequestHandlePtr(request_handle))
+            (*m_query_callback).OnComplete(
+                Query(RequestHandlePtr(request_handle))
             );
         } break;
         case UVPollEvent::PRIORITIZED: {
@@ -290,13 +290,13 @@ auto EventLoop::onTimeout(
     uv_timer_t* handle
 ) -> void
 {
-    auto* request_handle = static_cast<RequestHandle*>(handle->data);
+    auto* request_handle = static_cast<QueryHandle*>(handle->data);
 
     uv_poll_stop(&request_handle->m_poll);
     request_handle->onTimeout();
     --m_active_query_count;
-    (*m_request_callback).OnComplete(
-        Request(RequestHandlePtr(request_handle))
+    (*m_query_callback).OnComplete(
+        Query(RequestHandlePtr(request_handle))
     );
 }
 
@@ -315,9 +315,9 @@ auto EventLoop::requestsAcceptForQueryAsync(
          * If the request had a connect error simply notify the user.
          */
         if(   request->HasError()
-           && request->GetRequestStatus() == RequestStatus::CONNECT_FAILURE)
+           && request->GetRequestStatus() == QueryStatus::CONNECT_FAILURE)
         {
-            (*m_request_callback).OnComplete(std::move(request));
+            (*m_query_callback).OnComplete(std::move(request));
             continue;
         }
 
@@ -347,7 +347,7 @@ auto EventLoop::requestsAcceptForConnectAsync(
     {
         if(!request->connect())
         {
-            request->failed(RequestStatus::CONNECT_FAILURE);
+            request->failed(QueryStatus::CONNECT_FAILURE);
         }
     }
 
@@ -378,14 +378,14 @@ auto uv_close_event_loop_callback(uv_handle_t* handle) -> void
 
 auto on_uv_poll_callback(uv_poll_t* handle, int status, int events) -> void
 {
-    auto* request_handle = static_cast<RequestHandle*>(handle->data);
+    auto* request_handle = static_cast<QueryHandle*>(handle->data);
     auto* event_loop = request_handle->m_event_loop;
     event_loop->onPoll(handle, status, events);
 }
 
 auto on_uv_timeout_callback(uv_timer_t* handle) -> void
 {
-    auto* request_handle = static_cast<RequestHandle*>(handle->data);
+    auto* request_handle = static_cast<QueryHandle*>(handle->data);
     auto* event_loop = request_handle->m_event_loop;
     event_loop->onTimeout(handle);
 }

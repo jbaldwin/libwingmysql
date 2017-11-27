@@ -8,11 +8,11 @@
 namespace wing
 {
 
-class RequestHandle;
+class QueryHandle;
 
 class Row
 {
-    friend RequestHandle;
+    friend QueryHandle;
 public:
     ~Row() = default;
     Row(const Row&) = delete;

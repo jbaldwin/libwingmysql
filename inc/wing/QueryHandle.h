@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wing/RequestStatus.h"
+#include "wing/QueryStatus.h"
 #include "wing/Row.h"
 
 #include <uv.h>
@@ -14,24 +14,24 @@ namespace wing
 {
 
 class EventLoop;
-class RequestPool;
-class Request;
+class QueryPool;
+class Query;
 
-class RequestHandle
+class QueryHandle
 {
     friend EventLoop;
-    friend RequestPool;
-    friend Request;
+    friend QueryPool;
+    friend Query;
 
 public:
-    ~RequestHandle();
+    ~QueryHandle();
 
-    RequestHandle(const RequestHandle&) = delete;                   ///< No copying
-    RequestHandle(RequestHandle&&) = default;                       ///< Can move
-    auto operator = (const RequestHandle&) = delete;                ///< No copy assign
-    auto operator = (RequestHandle&&) -> RequestHandle& = default;  ///< Can move assign
+    QueryHandle(const QueryHandle&) = delete;                   ///< No copying
+    QueryHandle(QueryHandle&&) = default;                       ///< Can move
+    auto operator = (const QueryHandle&) = delete;              ///< No copy assign
+    auto operator = (QueryHandle&&) -> QueryHandle& = default;  ///< Can move assign
 
-    auto GetRequestStatus() const -> RequestStatus;
+    auto GetRequestStatus() const -> QueryStatus;
 
     auto SetTimeout(std::chrono::milliseconds timeout) -> void;
     auto GetTimeout() const -> std::chrono::milliseconds;
@@ -46,7 +46,7 @@ public:
     auto GetRows() const -> const std::vector<Row>&;
 
 private:
-    RequestHandle(
+    QueryHandle(
         EventLoop* event_loop,
         std::chrono::milliseconds timeout,
         std::string query
@@ -54,7 +54,7 @@ private:
 
     auto connect() -> bool;
     auto start() -> void;
-    auto failed(RequestStatus status) -> void;
+    auto failed(QueryStatus status) -> void;
 
     auto onRead() -> bool;
     auto onWrite() -> bool;
@@ -79,7 +79,7 @@ private:
     bool m_is_connected;
     bool m_had_error;
 
-    RequestStatus m_request_status;
+    QueryStatus m_request_status;
     std::string m_query;
 
     bool m_poll_closed;
@@ -100,6 +100,6 @@ private:
     ) -> void; ///< for closing/deleting this handle
 };
 
-using RequestHandlePtr = std::unique_ptr<RequestHandle>;
+using RequestHandlePtr = std::unique_ptr<QueryHandle>;
 
 } // wing

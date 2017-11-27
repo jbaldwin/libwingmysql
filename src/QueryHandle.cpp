@@ -1,6 +1,6 @@
-#include "wing/RequestHandle.h"
+#include "wing/QueryHandle.h"
 #include "wing/EventLoop.h"
-#include "wing/RequestPool.h"
+#include "wing/QueryPool.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -14,7 +14,7 @@ auto on_uv_close_request_handle_callback(
     uv_handle_t* handle
 ) -> void;
 
-RequestHandle::RequestHandle(
+QueryHandle::QueryHandle(
     EventLoop* event_loop,
     std::chrono::milliseconds timeout,
     std::string query
@@ -31,7 +31,7 @@ RequestHandle::RequestHandle(
       m_rows(),
       m_is_connected(false),
       m_had_error(false),
-      m_request_status(RequestStatus::BUILDING),
+      m_request_status(QueryStatus::BUILDING),
       m_query(std::move(query)),
       m_poll_closed(false),
       m_timeout_timer_closed(false)
@@ -39,58 +39,58 @@ RequestHandle::RequestHandle(
 
 }
 
-RequestHandle::~RequestHandle()
+QueryHandle::~QueryHandle()
 {
     freeResult();
     mysql_close(&m_mysql);
 }
 
-auto RequestHandle::GetRequestStatus() const -> RequestStatus
+auto QueryHandle::GetRequestStatus() const -> QueryStatus
 {
     return m_request_status;
 }
 
-auto RequestHandle::SetTimeout(std::chrono::milliseconds timeout) -> void
+auto QueryHandle::SetTimeout(std::chrono::milliseconds timeout) -> void
 {
     m_timeout = timeout;
 }
 
-auto RequestHandle::GetTimeout() const -> std::chrono::milliseconds
+auto QueryHandle::GetTimeout() const -> std::chrono::milliseconds
 {
     return m_timeout;
 }
 
-auto RequestHandle::SetQuery(const std::string& query) -> void
+auto QueryHandle::SetQuery(const std::string& query) -> void
 {
     m_query = query;
 }
 
-auto RequestHandle::GetQuery() const -> const std::string&
+auto QueryHandle::GetQuery() const -> const std::string&
 {
     return m_query;
 }
 
-auto RequestHandle::HasError() const -> bool
+auto QueryHandle::HasError() const -> bool
 {
     return m_had_error;
 }
 
-auto RequestHandle::GetError() -> std::string
+auto QueryHandle::GetError() -> std::string
 {
     return mysql_error(&m_mysql);
 }
 
-auto RequestHandle::GetFieldCount() const -> size_t
+auto QueryHandle::GetFieldCount() const -> size_t
 {
     return m_field_count;
 }
 
-auto RequestHandle::GetRowCount() const -> size_t
+auto QueryHandle::GetRowCount() const -> size_t
 {
     return m_row_count;
 }
 
-auto RequestHandle::GetRows() const -> const std::vector<Row>&
+auto QueryHandle::GetRows() const -> const std::vector<Row>&
 {
     if(!m_parsed_result) {
         m_parsed_result = true;
@@ -106,7 +106,7 @@ auto RequestHandle::GetRows() const -> const std::vector<Row>&
     return m_rows;
 }
 
-auto RequestHandle::connect() -> bool
+auto QueryHandle::connect() -> bool
 {
     if(!m_is_connected)
     {
@@ -141,9 +141,9 @@ auto RequestHandle::connect() -> bool
     return true;
 }
 
-auto RequestHandle::start() -> void
+auto QueryHandle::start() -> void
 {
-    m_request_status = RequestStatus::EXECUTING;
+    m_request_status = QueryStatus::EXECUTING;
     uv_timer_start(
         &m_timeout_timer,
         on_uv_timeout_callback,
@@ -152,57 +152,57 @@ auto RequestHandle::start() -> void
     );
 }
 
-auto RequestHandle::failed(RequestStatus status) -> void
+auto QueryHandle::failed(QueryStatus status) -> void
 {
     m_request_status = status;
     m_had_error = true;
     uv_timer_stop(&m_timeout_timer);
 }
 
-auto RequestHandle::onRead() -> bool
+auto QueryHandle::onRead() -> bool
 {
     auto success = (0 == mysql_read_query_result(&m_mysql));
     if(!success)
     {
-        failed(RequestStatus::READ_FAILURE);
+        failed(QueryStatus::READ_FAILURE);
         return false;
     }
 
     m_result = mysql_store_result(&m_mysql);
     if(m_result == nullptr)
     {
-        failed(RequestStatus::READ_FAILURE);
+        failed(QueryStatus::READ_FAILURE);
         return false;
     }
 
     uv_timer_stop(&m_timeout_timer);
-    m_request_status = RequestStatus::SUCCESS;
+    m_request_status = QueryStatus::SUCCESS;
     m_field_count    = mysql_num_fields(m_result);
     m_row_count      = mysql_num_rows(m_result);
     return true;
 }
 
-auto RequestHandle::onWrite() -> bool
+auto QueryHandle::onWrite() -> bool
 {
     auto success = (0 == mysql_send_query(&m_mysql, m_query.c_str(), m_query.length()));
     if(!success)
     {
-        failed(RequestStatus::WRITE_FAILURE);
+        failed(QueryStatus::WRITE_FAILURE);
     }
     return success;
 }
 
-auto RequestHandle::onTimeout() -> void
+auto QueryHandle::onTimeout() -> void
 {
-    failed(RequestStatus::TIMEOUT);
+    failed(QueryStatus::TIMEOUT);
 }
 
-auto RequestHandle::onDisconnect() -> void
+auto QueryHandle::onDisconnect() -> void
 {
-    failed(RequestStatus::DISCONNECT);
+    failed(QueryStatus::DISCONNECT);
 }
 
-auto RequestHandle::freeResult() -> void
+auto QueryHandle::freeResult() -> void
 {
     if(m_result != nullptr)
     {
@@ -215,7 +215,7 @@ auto RequestHandle::freeResult() -> void
     }
 }
 
-auto RequestHandle::close() -> void
+auto QueryHandle::close() -> void
 {
     uv_close(reinterpret_cast<uv_handle_t*>(&m_poll),          on_uv_close_request_handle_callback);
     uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_request_handle_callback);
@@ -223,7 +223,7 @@ auto RequestHandle::close() -> void
 
 auto on_uv_close_request_handle_callback(uv_handle_t* handle) -> void
 {
-    auto* request_handle = static_cast<RequestHandle*>(handle->data);
+    auto* request_handle = static_cast<QueryHandle*>(handle->data);
 
     if(handle == reinterpret_cast<uv_handle_t*>(&request_handle->m_poll))
     {
