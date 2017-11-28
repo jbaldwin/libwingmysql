@@ -56,16 +56,18 @@ int main(int argc, char* argv[])
 
     wing::EventLoop event_loop(
         std::make_unique<RequestCallback>(),
-        hostname,
-        port,
-        user,
-        password,
-        db,
-        0
+        wing::Connection(
+            hostname,
+            port,
+            user,
+            password,
+            db,
+            0
+        )
     );
 
     using namespace std::chrono_literals;
-    auto& request_pool = event_loop.GetRequestPool();
+    auto& request_pool = event_loop.GetQueryPool();
     auto request = request_pool.Produce(
         query,
         1000ms

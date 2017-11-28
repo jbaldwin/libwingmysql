@@ -2,6 +2,7 @@
 
 #include "wing/QueryStatus.h"
 #include "wing/Row.h"
+#include "wing/Connection.h"
 
 #include <uv.h>
 #include <mysql/mysql.h>
@@ -44,6 +45,8 @@ public:
     auto BindUInt64(uint64_t param) -> void;
     auto BindInt64(int64_t param) -> void;
 
+    auto Execute() -> QueryStatus;
+
     auto HasError() const -> bool;
     auto GetError() -> std::string;
 
@@ -54,13 +57,16 @@ public:
 private:
     QueryHandle(
         EventLoop* event_loop,
+        QueryPool* query_pool,
+        const Connection& connection,
         std::chrono::milliseconds timeout,
         std::string query
     );
 
     auto connect() -> bool;
-    auto start() -> void;
-    auto failed(QueryStatus status) -> void;
+    auto startAsync() -> void;
+    auto bindParameters() -> void;
+    auto failedAsync(QueryStatus status) -> void;
 
     auto onRead() -> bool;
     auto onWrite() -> bool;
@@ -72,6 +78,8 @@ private:
     auto close() -> void;
 
     EventLoop* m_event_loop;
+    QueryPool* m_query_pool;
+    const Connection& m_connection;
 
     uv_poll_t m_poll;
     uv_timer_t m_timeout_timer;
@@ -85,7 +93,7 @@ private:
     bool m_is_connected;
     bool m_had_error;
 
-    QueryStatus m_request_status;
+    QueryStatus m_query_status;
     std::string m_original_query;
     std::string m_query_buffer;
     std::vector<StringView> m_query_parts;

@@ -53,22 +53,16 @@ int main(int argc, char* argv[])
 
     wing::startup();
 
+    wing::Connection connection(hostname, port, user, password, db, 0);
+
     wing::EventLoop event_loop(
         std::make_unique<RequestCallback>(),
-        hostname,
-        port,
-        user,
-        password,
-        db,
-        0
+        connection
     );
 
     using namespace std::chrono_literals;
-    auto& request_pool = event_loop.GetRequestPool();
-    auto request = request_pool.Produce(
-        query,
-        1000ms
-    );
+    auto& request_pool = event_loop.GetQueryPool();
+    auto request = request_pool.Produce(query, 1000ms);
 
     event_loop.StartQuery(std::move(request));
 

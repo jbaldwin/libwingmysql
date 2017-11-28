@@ -1,5 +1,6 @@
 #pragma once
 
+#include "wing/Connection.h"
 #include "wing/EventLoop.h"
 #include "wing/IQueryCallback.h"
 #include "wing/Query.h"

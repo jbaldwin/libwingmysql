@@ -4,19 +4,30 @@
 namespace wing
 {
 
+QueryPool::QueryPool(Connection connection)
+    : m_lock(),
+      m_queries(),
+      m_connection(std::move(connection)),
+      m_event_loop(nullptr)
+{
+
+}
+
 QueryPool::QueryPool(
+    Connection connection,
     EventLoop* event_loop
 )
     : m_lock(),
-      m_requests(),
+      m_queries(),
+      m_connection(std::move(connection)),
       m_event_loop(event_loop)
 {
 
 }
 
-QueryPool::~QueryPool()
+auto QueryPool::GetConnection() const -> const Connection&
 {
-
+    return m_connection;
 }
 
 auto QueryPool::Produce(
@@ -25,12 +36,14 @@ auto QueryPool::Produce(
 ) -> Query
 {
     m_lock.lock();
-    if(m_requests.empty())
+    if(m_queries.empty())
     {
         m_lock.unlock();
         RequestHandlePtr request_handle_ptr(
             new QueryHandle(
                 m_event_loop,
+                this,
+                m_connection,
                 timeout,
                 query
             )
@@ -40,8 +53,8 @@ auto QueryPool::Produce(
     }
     else
     {
-        auto request_handle_ptr = std::move(m_requests.back());
-        m_requests.pop_back();
+        auto request_handle_ptr = std::move(m_queries.back());
+        m_queries.pop_back();
         m_lock.unlock();
 
         (*request_handle_ptr).SetTimeout(timeout);
@@ -51,29 +64,28 @@ auto QueryPool::Produce(
     }
 }
 
-auto QueryPool::returnRequest(std::unique_ptr<QueryHandle> request_handle) -> void
+auto QueryPool::returnRequest(std::unique_ptr<QueryHandle> query_handle) -> void
 {
     // If the handle has had any kind of error while processing
-    // simply release the memory cand close it.
+    // simply release the memory and close it.
     // libuv will shutdown the poll/timer handles
     // and then delete the request handle.
-    if((*request_handle).HasError())
+    if((*query_handle).HasError())
     {
-        auto* raw = request_handle.release();
+        auto* raw = query_handle.release();
         raw->close();
         return;
     }
 
     {
-        (*request_handle).freeResult();
         std::lock_guard<std::mutex> guard(m_lock);
-        m_requests.emplace_back(std::move(request_handle));
+        m_queries.emplace_back(std::move(query_handle));
     }
 }
 
 auto QueryPool::close() -> void
 {
-    for(auto& request_handle : m_requests)
+    for(auto& request_handle : m_queries)
     {
         auto* raw = request_handle.release();
         raw->close();

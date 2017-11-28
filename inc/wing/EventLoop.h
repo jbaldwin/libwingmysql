@@ -2,6 +2,7 @@
 
 #include "wing/QueryPool.h"
 #include "wing/IQueryCallback.h"
+#include "wing/Connection.h"
 
 #include <uv.h>
 
@@ -23,12 +24,7 @@ class EventLoop
 public:
     EventLoop(
         std::unique_ptr<IQueryCallback> query_callback,
-        const std::string& host,
-        uint16_t port,
-        const std::string& user,
-        const std::string& password,
-        const std::string& db,
-        uint64_t client_flags
+        Connection connection
     );
 
     ~EventLoop();
@@ -44,7 +40,7 @@ public:
 
     auto Stop() -> void;
 
-    auto GetRequestPool() -> QueryPool&;
+    auto GetQueryPool() -> QueryPool&;
 
     auto StartQuery(Query request) -> bool;
 
@@ -60,13 +56,6 @@ private:
     std::atomic<uint64_t> m_active_query_count;
 
     std::unique_ptr<IQueryCallback> m_query_callback;
-
-    std::string m_host;
-    uint16_t m_port;
-    std::string m_user;
-    std::string m_password;
-    std::string m_db;
-    uint64_t m_client_flags;
 
     std::thread m_background_query_thread;
     uv_loop_t* m_query_loop;

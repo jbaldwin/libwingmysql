@@ -21,6 +21,7 @@ set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -g -gdwarf-2 -D_GLIBCXX_DE
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g -gdwarf-2")
 
 set(LIB_WING_MYSQL_SOURCE_FILES
+    inc/wing/Connection.h src/Connection.cpp
     inc/wing/EventLoop.h src/EventLoop.cpp
     inc/wing/IQueryCallback.h
     inc/wing/Query.h src/Query.cpp

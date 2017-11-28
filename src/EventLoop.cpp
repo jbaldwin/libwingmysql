@@ -13,25 +13,14 @@ auto requests_accept_for_connect_async(uv_async_t* async) -> void;
 
 EventLoop::EventLoop(
     std::unique_ptr<IQueryCallback> query_callback,
-    const std::string& host,
-    uint16_t port,
-    const std::string& user,
-    const std::string& password,
-    const std::string& db,
-    uint64_t client_flags
+    Connection connection
 )
-    : m_request_pool(this),
+    : m_request_pool(std::move(connection), this),
       m_is_query_running(false),
       m_is_connect_running(false),
       m_is_stopping(false),
       m_active_query_count(0),
       m_query_callback(std::move(query_callback)),
-      m_host(host),
-      m_port(port),
-      m_user(user),
-      m_password(password),
-      m_db(db),
-      m_client_flags(client_flags),
       m_background_query_thread(),
       m_query_loop(uv_loop_new()),
       m_query_async(),
@@ -53,8 +42,8 @@ EventLoop::EventLoop(
     uv_async_init(m_connect_loop, &m_connect_async, requests_accept_for_connect_async);
     m_connect_async.data = this;
 
-    m_background_query_thread = std::thread([this] { run_queries(); });
-    m_background_connect_thread    = std::thread([this] { run_connect(); });
+    m_background_query_thread   = std::thread([this] { run_queries(); });
+    m_background_connect_thread = std::thread([this] { run_connect(); });
 
     while(!IsRunning())
     {
@@ -140,7 +129,7 @@ auto EventLoop::Stop() -> void
         std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
         for(auto& request : m_pending_query_requests)
         {
-            request->failed(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
             (*m_query_callback).OnComplete(std::move(request));
         }
         m_pending_query_requests.clear();
@@ -150,14 +139,14 @@ auto EventLoop::Stop() -> void
         std::lock_guard<std::mutex> guard(m_pending_connect_requests_lock);
         for(auto& request : m_pending_query_requests)
         {
-            request->failed(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
             (*m_query_callback).OnComplete(std::move(request));
         }
         m_pending_connect_requests.clear();
     }
 }
 
-auto EventLoop::GetRequestPool() -> QueryPool&
+auto EventLoop::GetQueryPool() -> QueryPool&
 {
     return m_request_pool;
 }
@@ -322,7 +311,7 @@ auto EventLoop::requestsAcceptForQueryAsync(
         }
 
         QueryHandle* query_handle = request.m_query_handle.release();
-        query_handle->start();
+        query_handle->startAsync();
         uv_poll_start(
             &query_handle->m_poll,
             UV_WRITABLE | UV_DISCONNECT,
@@ -347,7 +336,7 @@ auto EventLoop::requestsAcceptForConnectAsync(
     {
         if(!request->connect())
         {
-            request->failed(QueryStatus::CONNECT_FAILURE);
+            request->failedAsync(QueryStatus::CONNECT_FAILURE);
         }
     }
 
