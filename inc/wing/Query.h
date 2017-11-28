@@ -15,7 +15,7 @@ public:
     ~Query();
     Query(const Query&) = delete;                   ///< No copying
     Query(Query&& from) = default;                  ///< Can move
-    auto operator = (const Query&) = delete;          ///< No copy assign
+    auto operator = (const Query&) = delete;        ///< No copy assign
     auto operator = (Query&&) -> Query& = default;  ///< Can move assign
 
     auto operator * () -> QueryHandle&;
@@ -23,11 +23,11 @@ public:
     auto operator -> () -> QueryHandle*;
     auto operator -> () const -> const QueryHandle*;
 private:
-    Query(
-        std::unique_ptr<QueryHandle> request_handle
+    explicit Query(
+        std::unique_ptr<QueryHandle> query_handle
     );
 
-    std::unique_ptr<QueryHandle> m_request_handle;
+    std::unique_ptr<QueryHandle> m_query_handle;
 };
 
 } // wing

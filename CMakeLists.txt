@@ -29,6 +29,7 @@ set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/QueryStatus.h src/QueryStatus.cpp
     inc/wing/Row.h src/Row.cpp
     inc/wing/Types.h
+    inc/wing/Util.h src/Util.cpp
     inc/wing/Value.h src/Value.cpp
     inc/wing/WingMySQL.h src/WingMySQL.cpp
 )

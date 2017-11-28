@@ -1,9 +1,12 @@
 #include "wing/QueryHandle.h"
 #include "wing/EventLoop.h"
 #include "wing/QueryPool.h"
+#include "wing/Util.h"
 
 #include <stdexcept>
 #include <sstream>
+
+#include <iostream>
 
 namespace wing
 {
@@ -32,11 +35,20 @@ QueryHandle::QueryHandle(
       m_is_connected(false),
       m_had_error(false),
       m_request_status(QueryStatus::BUILDING),
-      m_query(std::move(query)),
+      m_original_query(),
+      m_query_buffer(),
+      m_query_parts(m_bind_param_count),
+      m_bind_param_count(0),
+      m_bind_params(),
       m_poll_closed(false),
-      m_timeout_timer_closed(false)
+      m_timeout_timer_closed(false),
+      m_converter()
 {
+    mysql_init(&m_mysql);
+    unsigned int connect_timeout = 1;
+    mysql_options(&m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
 
+    SetQuery(std::move(query));
 }
 
 QueryHandle::~QueryHandle()
@@ -60,14 +72,59 @@ auto QueryHandle::GetTimeout() const -> std::chrono::milliseconds
     return m_timeout;
 }
 
-auto QueryHandle::SetQuery(const std::string& query) -> void
+auto QueryHandle::SetQuery(std::string query) -> void
 {
-    m_query = query;
+    m_original_query = std::move(query);
+    // Find all of the bind params.
+    m_query_parts = split_view(m_original_query, '?');
+    if(m_query_parts.size() > 1)
+    {
+        m_query_buffer.reserve(m_original_query.size() + 256);
+        m_bind_param_count = m_query_parts.size() - 1;
+        m_bind_params.reserve(m_field_count);
+    }
+    else
+    {
+        m_field_count = 0;
+    }
 }
 
-auto QueryHandle::GetQuery() const -> const std::string&
+auto QueryHandle::GetQueryOriginal() const -> const std::string&
 {
-    return m_query;
+    return m_original_query;
+}
+
+auto QueryHandle::GetQueryWithBindParams() const -> const std::string&
+{
+    return m_query_buffer;
+}
+
+auto QueryHandle::BindString(const std::string& param) -> void
+{
+    // https://dev.mysql.com/doc/refman/5.7/en/mysql-real-escape-string.html
+    std::string buffer;
+    buffer.resize(param.length() * 2 + 1);
+
+    size_t length = mysql_real_escape_string(&m_mysql, &buffer.front(), &param.front(), param.length());
+    buffer.resize(length);
+
+    m_bind_params.emplace_back(std::move(buffer));
+}
+
+auto QueryHandle::BindUInt64(uint64_t param) -> void
+{
+    m_converter.clear();
+    m_converter.str("");
+    m_converter << param;
+    m_bind_params.emplace_back(m_converter.str());
+}
+
+auto QueryHandle::BindInt64(int64_t param) -> void
+{
+    m_converter.clear();
+    m_converter.str("");
+    m_converter << param;
+    m_bind_params.emplace_back(m_converter.str());
 }
 
 auto QueryHandle::HasError() const -> bool
@@ -110,10 +167,6 @@ auto QueryHandle::connect() -> bool
 {
     if(!m_is_connected)
     {
-        mysql_init(&m_mysql);
-        unsigned int connect_timeout = 1;
-        mysql_options(&m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
-
         auto* success = mysql_real_connect(
             &m_mysql,
             m_event_loop->m_host.c_str(),
@@ -144,6 +197,30 @@ auto QueryHandle::connect() -> bool
 auto QueryHandle::start() -> void
 {
     m_request_status = QueryStatus::EXECUTING;
+
+    // If there are params to bind, create the true query now.
+    if(m_bind_param_count > 0)
+    {
+        if(m_bind_param_count != m_bind_params.size())
+        {
+            throw std::runtime_error("not enough bind params");
+        }
+
+        for(size_t i = 0; i < m_query_parts.size(); ++i)
+        {
+            m_query_buffer.append(m_query_parts[i].to_string());
+            std::cout << m_query_buffer << "\n";
+            // the last query part might be trailing text
+            if(i < m_bind_params.size())
+            {
+                m_query_buffer.append(m_bind_params[i]);
+                std::cout << m_query_buffer << "\n\n";
+            }
+        }
+    }
+
+    std::cout << "final: " << m_query_buffer << "\n";
+
     uv_timer_start(
         &m_timeout_timer,
         on_uv_timeout_callback,
@@ -184,7 +261,10 @@ auto QueryHandle::onRead() -> bool
 
 auto QueryHandle::onWrite() -> bool
 {
-    auto success = (0 == mysql_send_query(&m_mysql, m_query.c_str(), m_query.length()));
+    // If there were no bind params, use the raw query provided.
+    const std::string& query = (m_bind_param_count == 0) ? m_original_query : m_query_buffer;
+
+    auto success = (0 == mysql_send_query(&m_mysql, query.c_str(), query.length()));
     if(!success)
     {
         failed(QueryStatus::WRITE_FAILURE);

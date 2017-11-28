@@ -9,6 +9,7 @@
 #include <string>
 #include <memory>
 #include <chrono>
+#include <sstream>
 
 namespace wing
 {
@@ -35,8 +36,13 @@ public:
 
     auto SetTimeout(std::chrono::milliseconds timeout) -> void;
     auto GetTimeout() const -> std::chrono::milliseconds;
-    auto SetQuery(const std::string& query) -> void;
-    auto GetQuery() const -> const std::string&;
+    auto SetQuery(std::string query) -> void;
+    auto GetQueryOriginal() const -> const std::string&;
+    auto GetQueryWithBindParams() const -> const std::string&;
+
+    auto BindString(const std::string& param) -> void;
+    auto BindUInt64(uint64_t param) -> void;
+    auto BindInt64(int64_t param) -> void;
 
     auto HasError() const -> bool;
     auto GetError() -> std::string;
@@ -80,10 +86,16 @@ private:
     bool m_had_error;
 
     QueryStatus m_request_status;
-    std::string m_query;
+    std::string m_original_query;
+    std::string m_query_buffer;
+    std::vector<StringView> m_query_parts;
+    size_t m_bind_param_count;
+    std::vector<std::string> m_bind_params;
 
     bool m_poll_closed;
     bool m_timeout_timer_closed;
+
+    std::stringstream m_converter;
 
     friend auto on_uv_poll_callback(
         uv_poll_t* handle,

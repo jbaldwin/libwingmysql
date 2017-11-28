@@ -321,10 +321,10 @@ auto EventLoop::requestsAcceptForQueryAsync(
             continue;
         }
 
-        auto* request_handle = request.m_request_handle.release();
-        request_handle->start();
+        QueryHandle* query_handle = request.m_query_handle.release();
+        query_handle->start();
         uv_poll_start(
-            &request_handle->m_poll,
+            &query_handle->m_poll,
             UV_WRITABLE | UV_DISCONNECT,
             on_uv_poll_callback
         );

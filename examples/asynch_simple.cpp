@@ -7,7 +7,7 @@ class RequestCallback : public wing::IQueryCallback
 public:
     auto OnComplete(wing::Query request) -> void
     {
-        std::cout << "Finished query: " << request->GetQuery() << std::endl;
+        std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
         std::cout << wing::query_status2str(request->GetRequestStatus()) << "\n";
         if(request->HasError())
         {
