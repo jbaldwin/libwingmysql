@@ -7,6 +7,11 @@
 namespace wing
 {
 
+/**
+ * This proxy object is used to modify the SQL query and
+ * guarantee that the underlying object will always be returned
+ * to the QueryPool for re-use.
+ */
 class Query
 {
     friend class QueryPool;
@@ -18,10 +23,16 @@ public:
     auto operator = (const Query&) = delete;        ///< No copy assign
     auto operator = (Query&&) -> Query& = default;  ///< Can move assign
 
+    /**
+     * Access to the SQL Query object.
+     * @return Underlying query handle.
+     * {@
+     */
     auto operator * () -> QueryHandle&;
     auto operator * () const -> const QueryHandle&;
     auto operator -> () -> QueryHandle*;
     auto operator -> () const -> const QueryHandle*;
+    /** @} */
 private:
     explicit Query(
         std::unique_ptr<QueryHandle> query_handle

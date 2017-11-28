@@ -1,9 +1,9 @@
-#include "wing/Connection.h"
+#include "wing/ConnectionInfo.h"
 
 namespace wing
 {
 
-Connection::Connection(
+ConnectionInfo::ConnectionInfo(
     std::string host,
     uint16_t port,
     std::string user,
@@ -21,27 +21,27 @@ Connection::Connection(
 
 }
 
-auto Connection::GetHost() const -> const std::string& {
+auto ConnectionInfo::GetHost() const -> const std::string& {
     return m_host;
 }
 
-auto Connection::GetPort() const -> uint16_t {
+auto ConnectionInfo::GetPort() const -> uint16_t {
     return m_port;
 }
 
-auto Connection::GetUser() const -> const std::string& {
+auto ConnectionInfo::GetUser() const -> const std::string& {
     return m_user;
 }
 
-auto Connection::GetPassword() const -> const std::string& {
+auto ConnectionInfo::GetPassword() const -> const std::string& {
     return m_password;
 }
 
-auto Connection::GetDatabase() const -> const std::string& {
+auto ConnectionInfo::GetDatabase() const -> const std::string& {
     return m_database;
 }
 
-auto Connection::GetClientFlags() const -> uint64_t {
+auto ConnectionInfo::GetClientFlags() const -> uint64_t {
     return m_client_flags;
 }
 

@@ -13,10 +13,21 @@ class Value
 public:
     ~Value() = default;
     Value(const Value&) = default;
-    Value(Value&&) = delete;
-    auto operator = (const Value&) -> Value& = delete;
+    Value(Value&&) = default;
+    auto operator = (const Value&) -> Value& = default;
     auto operator = (Value&&) -> Value& = default;
 
+    /**
+     * Transforms the result value into the specified type.
+     * Note that if the conversion fails a default value for
+     * that type will be returned.
+     *
+     * It is also safe to always call AsString() since the
+     * MySQL server will always return the data as char[].
+     *
+     * @return The value as type T.
+     * @{
+     */
     auto IsNull() const -> bool;
     auto AsString() const -> const StringView;
     auto AsUInt64() const -> uint64_t;
@@ -30,6 +41,7 @@ public:
     auto AsBool() const -> bool;
     auto AsFloat() const -> float;
     auto AsDouble() const -> double;
+    /** @} */
 
 private:
     explicit Value(StringView data);

@@ -5,17 +5,33 @@ namespace wing
 
 using namespace std::chrono_literals;
 
-auto uv_close_event_loop_callback(uv_handle_t* handle) -> void;
-auto on_uv_poll_callback(uv_poll_t* handle, int status, int events) -> void;
-auto on_uv_timeout_callback(uv_timer_t* handle) -> void;
-auto requests_accept_for_query_async(uv_async_t* async) -> void;
-auto requests_accept_for_connect_async(uv_async_t* async) -> void;
+auto uv_close_event_loop_callback(
+    uv_handle_t* handle
+) -> void;
+
+auto on_uv_poll_callback(
+    uv_poll_t* handle,
+    int status,
+    int events
+) -> void;
+
+auto on_uv_timeout_callback(
+    uv_timer_t* handle
+) -> void;
+
+auto requests_accept_for_query_async(
+    uv_async_t* async
+) -> void;
+
+auto requests_accept_for_connect_async(
+    uv_async_t* async
+) -> void;
 
 EventLoop::EventLoop(
     std::unique_ptr<IQueryCallback> query_callback,
-    Connection connection
+    ConnectionInfo connection
 )
-    : m_request_pool(std::move(connection), this),
+    : m_query_pool(std::move(connection), this),
       m_is_query_running(false),
       m_is_connect_running(false),
       m_is_stopping(false),
@@ -25,16 +41,16 @@ EventLoop::EventLoop(
       m_query_loop(uv_loop_new()),
       m_query_async(),
       m_query_async_closed(false),
-      m_pending_query_requests_lock(),
-      m_pending_query_requests(),
-      m_grabbed_query_requests(),
+      m_pending_queries_lock(),
+      m_pending_queries(),
+      m_grabbed_queries(),
       m_background_connect_thread(),
       m_connect_loop(uv_loop_new()),
       m_connect_async(),
       m_connect_async_closed(false),
-      m_pending_connect_requests_lock(),
-      m_pending_connect_requests(),
-      m_grabbed_connect_requests()
+      m_pending_connects_lock(),
+      m_pending_connects(),
+      m_grabbed_connects()
 {
     uv_async_init(m_query_loop, &m_query_async, requests_accept_for_query_async);
     m_query_async.data = this;
@@ -92,7 +108,7 @@ auto EventLoop::Stop() -> void
         uv_run(m_connect_loop, UV_RUN_ONCE);
     }
 
-    m_request_pool.close();
+    m_query_pool.close();
 
     while(true)
     {
@@ -126,56 +142,58 @@ auto EventLoop::Stop() -> void
      * Clear out any pending / connecting requests.
      */
     {
-        std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
-        for(auto& request : m_pending_query_requests)
+        std::lock_guard<std::mutex> guard(m_pending_queries_lock);
+        for(auto& request : m_pending_queries)
         {
             request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
             (*m_query_callback).OnComplete(std::move(request));
         }
-        m_pending_query_requests.clear();
+        m_pending_queries.clear();
     }
 
     {
-        std::lock_guard<std::mutex> guard(m_pending_connect_requests_lock);
-        for(auto& request : m_pending_query_requests)
+        std::lock_guard<std::mutex> guard(m_pending_connects_lock);
+        for(auto& request : m_pending_queries)
         {
             request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
             (*m_query_callback).OnComplete(std::move(request));
         }
-        m_pending_connect_requests.clear();
+        m_pending_connects.clear();
     }
 }
 
 auto EventLoop::GetQueryPool() -> QueryPool&
 {
-    return m_request_pool;
+    return m_query_pool;
 }
 
-auto EventLoop::StartQuery(Query request) -> bool
+auto EventLoop::StartQuery(
+    Query query
+) -> bool
 {
-    // Do not accept new requests if shutting down.
+    // Do not accept new queries if shutting down.
     if(m_is_stopping)
     {
         return false;
     }
 
-    // Do not accept request objects that had errors
+    // Do not accept query objects that had errors
     // on previous queries.
-    if(request->HasError())
+    if(query->HasError())
     {
         return false;
     }
 
-    if(request->m_is_connected)
+    if(query->m_is_connected)
     {
-        std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
-        m_pending_query_requests.emplace_back(std::move(request));
+        std::lock_guard<std::mutex> guard(m_pending_queries_lock);
+        m_pending_queries.emplace_back(std::move(query));
         uv_async_send(&m_query_async); // must be in the lock scope
     }
     else
     {
-        std::lock_guard<std::mutex> guard(m_pending_connect_requests_lock);
-        m_pending_connect_requests.emplace_back(std::move(request));
+        std::lock_guard<std::mutex> guard(m_pending_connects_lock);
+        m_pending_connects.emplace_back(std::move(query));
         uv_async_send(&m_connect_async);
     }
 
@@ -240,7 +258,7 @@ auto EventLoop::onPoll(
             --m_active_query_count;
             // Regardless of the onRead() result the request is done
             (*m_query_callback).OnComplete(
-                Query(RequestHandlePtr(request_handle))
+                Query(QueryHandlePtr(request_handle))
             );
         } break;
         case UVPollEvent::WRITEABLE: {
@@ -258,7 +276,7 @@ auto EventLoop::onPoll(
                 --m_active_query_count;
                 // If writing failed, notify the client.
                 (*m_query_callback).OnComplete(
-                    Query(RequestHandlePtr(request_handle))
+                    Query(QueryHandlePtr(request_handle))
                 );
             }
         } break;
@@ -266,7 +284,7 @@ auto EventLoop::onPoll(
             request_handle->onDisconnect();
             --m_active_query_count;
             (*m_query_callback).OnComplete(
-                Query(RequestHandlePtr(request_handle))
+                Query(QueryHandlePtr(request_handle))
             );
         } break;
         case UVPollEvent::PRIORITIZED: {
@@ -285,7 +303,7 @@ auto EventLoop::onTimeout(
     request_handle->onTimeout();
     --m_active_query_count;
     (*m_query_callback).OnComplete(
-        Query(RequestHandlePtr(request_handle))
+        Query(QueryHandlePtr(request_handle))
     );
 }
 
@@ -294,17 +312,17 @@ auto EventLoop::requestsAcceptForQueryAsync(
 ) -> void
 {
     {
-        std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
-        m_grabbed_query_requests.swap(m_pending_query_requests);
+        std::lock_guard<std::mutex> guard(m_pending_queries_lock);
+        m_grabbed_queries.swap(m_pending_queries);
     }
 
-    for(auto& request : m_grabbed_query_requests)
+    for(auto& request : m_grabbed_queries)
     {
         /**
          * If the request had a connect error simply notify the user.
          */
         if(   request->HasError()
-           && request->GetRequestStatus() == QueryStatus::CONNECT_FAILURE)
+           && request->GetQueryStatus() == QueryStatus::CONNECT_FAILURE)
         {
             (*m_query_callback).OnComplete(std::move(request));
             continue;
@@ -319,8 +337,8 @@ auto EventLoop::requestsAcceptForQueryAsync(
         );
     }
 
-    m_active_query_count += m_grabbed_query_requests.size();
-    m_grabbed_query_requests.clear();
+    m_active_query_count += m_grabbed_queries.size();
+    m_grabbed_queries.clear();
 }
 
 auto EventLoop::requestsAcceptForConnectAsync(
@@ -328,11 +346,11 @@ auto EventLoop::requestsAcceptForConnectAsync(
 ) -> void
 {
     {
-        std::lock_guard<std::mutex> guard(m_pending_connect_requests_lock);
-        m_grabbed_connect_requests.swap(m_pending_connect_requests);
+        std::lock_guard<std::mutex> guard(m_pending_connects_lock);
+        m_grabbed_connects.swap(m_pending_connects);
     }
 
-    for(auto& request : m_grabbed_connect_requests)
+    for(auto& request : m_grabbed_connects)
     {
         if(!request->connect())
         {
@@ -348,15 +366,15 @@ auto EventLoop::requestsAcceptForConnectAsync(
          * function at any given time negating the end user from needing
          * to do any sort of locking on their side.
          */
-        std::lock_guard<std::mutex> guard(m_pending_query_requests_lock);
-        for(auto& request : m_grabbed_connect_requests)
+        std::lock_guard<std::mutex> guard(m_pending_queries_lock);
+        for(auto& request : m_grabbed_connects)
         {
-            m_pending_query_requests.emplace_back(std::move(request));
+            m_pending_queries.emplace_back(std::move(request));
         }
         uv_async_send(&m_query_async); // must be in the lock scope
     }
 
-    m_grabbed_connect_requests.clear();
+    m_grabbed_connects.clear();
 }
 
 auto uv_close_event_loop_callback(uv_handle_t* handle) -> void

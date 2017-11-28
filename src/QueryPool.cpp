@@ -4,7 +4,7 @@
 namespace wing
 {
 
-QueryPool::QueryPool(Connection connection)
+QueryPool::QueryPool(ConnectionInfo connection)
     : m_lock(),
       m_queries(),
       m_connection(std::move(connection)),
@@ -14,7 +14,7 @@ QueryPool::QueryPool(Connection connection)
 }
 
 QueryPool::QueryPool(
-    Connection connection,
+    ConnectionInfo connection,
     EventLoop* event_loop
 )
     : m_lock(),
@@ -25,7 +25,7 @@ QueryPool::QueryPool(
 
 }
 
-auto QueryPool::GetConnection() const -> const Connection&
+auto QueryPool::GetConnection() const -> const ConnectionInfo&
 {
     return m_connection;
 }
@@ -39,10 +39,10 @@ auto QueryPool::Produce(
     if(m_queries.empty())
     {
         m_lock.unlock();
-        RequestHandlePtr request_handle_ptr(
+        QueryHandlePtr request_handle_ptr(
             new QueryHandle(
                 m_event_loop,
-                this,
+                *this,
                 m_connection,
                 timeout,
                 query
@@ -64,7 +64,9 @@ auto QueryPool::Produce(
     }
 }
 
-auto QueryPool::returnRequest(std::unique_ptr<QueryHandle> query_handle) -> void
+auto QueryPool::returnQuery(
+    QueryHandlePtr query_handle
+) -> void
 {
     // If the handle has had any kind of error while processing
     // simply release the memory and close it.

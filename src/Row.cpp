@@ -5,7 +5,10 @@
 namespace wing
 {
 
-Row::Row(MYSQL_ROW mysql_row, size_t field_count)
+Row::Row(
+    MYSQL_ROW mysql_row,
+    size_t field_count
+)
     : m_values()
 {
     m_values.reserve(field_count);
@@ -22,7 +25,9 @@ Row::Row(MYSQL_ROW mysql_row, size_t field_count)
     }
 }
 
-auto Row::GetColumn(size_t idx) const -> const Value& {
+auto Row::GetColumn(
+    size_t idx
+) const -> const Value& {
     return m_values.at(idx);
 }
 

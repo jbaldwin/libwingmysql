@@ -8,8 +8,7 @@ public:
     auto OnComplete(wing::Query request) -> void
     {
         std::cout << "Finished query: " << request->GetQueryWithBindParams() << std::endl;
-        std::cout << wing::query_status2str(request->GetRequestStatus()) << "\n";
-        std::cout << "mysql_error: " << request->GetError() << "\n";
+        std::cout << wing::query_status2str(request->GetQueryStatus()) << "\n";
         if(request->HasError())
         {
             std::cout << "Error: " << request->GetError() << "\n";
@@ -50,35 +49,28 @@ int main(int argc, char* argv[])
     std::string user(argv[3]);
     std::string password(argv[4]);
     std::string db(argv[5]);
-    std::string query(argv[6]);
+    std::string mysql_query_string(argv[6]);
 
     wing::startup();
 
+    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
+
     wing::EventLoop event_loop(
         std::make_unique<RequestCallback>(),
-        wing::Connection(
-            hostname,
-            port,
-            user,
-            password,
-            db,
-            0
-        )
+        connection
     );
 
     using namespace std::chrono_literals;
-    auto& request_pool = event_loop.GetQueryPool();
-    auto request = request_pool.Produce(
-        query,
-        1000ms
-    );
+    auto& query_pool = event_loop.GetQueryPool();
+    auto query = query_pool.Produce(mysql_query_string, 1000ms);
 
     for(size_t i = 7; i < static_cast<size_t>(argc); ++i)
     {
-        request->BindString(argv[i]);
+        // we'll only support strings for the example
+        query->BindString(argv[i]);
     }
 
-    event_loop.StartQuery(std::move(request));
+    event_loop.StartQuery(std::move(query));
 
     std::this_thread::sleep_for(1000ms);
     while(event_loop.GetActiveQueryCount() > 0)

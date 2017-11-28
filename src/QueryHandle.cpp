@@ -11,14 +11,14 @@ namespace wing
 
 extern auto on_uv_timeout_callback(uv_timer_t* handle) -> void;
 
-auto on_uv_close_request_handle_callback(
+auto on_uv_close_query_handle_callback(
     uv_handle_t* handle
 ) -> void;
 
 QueryHandle::QueryHandle(
     EventLoop* event_loop,
-    QueryPool* query_pool,
-    const Connection& connection,
+    QueryPool& query_pool,
+    const ConnectionInfo& connection,
     std::chrono::milliseconds timeout,
     std::string query
 )
@@ -63,7 +63,7 @@ QueryHandle::~QueryHandle()
     mysql_close(&m_mysql);
 }
 
-auto QueryHandle::GetRequestStatus() const -> QueryStatus
+auto QueryHandle::GetQueryStatus() const -> QueryStatus
 {
     return m_query_status;
 }
@@ -78,7 +78,9 @@ auto QueryHandle::GetTimeout() const -> std::chrono::milliseconds
     return m_timeout;
 }
 
-auto QueryHandle::SetQuery(std::string query) -> void
+auto QueryHandle::SetQuery(
+    std::string query
+) -> void
 {
     m_original_query = std::move(query);
     // Find all of the bind params.
@@ -117,7 +119,9 @@ auto QueryHandle::BindString(const std::string& param) -> void
     m_bind_params.emplace_back(std::move(buffer));
 }
 
-auto QueryHandle::BindUInt64(uint64_t param) -> void
+auto QueryHandle::BindUInt64(
+    uint64_t param
+) -> void
 {
     m_converter.clear();
     m_converter.str("");
@@ -125,7 +129,9 @@ auto QueryHandle::BindUInt64(uint64_t param) -> void
     m_bind_params.emplace_back(m_converter.str());
 }
 
-auto QueryHandle::BindInt64(int64_t param) -> void
+auto QueryHandle::BindInt64(
+    int64_t param
+) -> void
 {
     m_converter.clear();
     m_converter.str("");
@@ -278,7 +284,9 @@ auto QueryHandle::bindParameters() -> void
     }
 }
 
-auto QueryHandle::failedAsync(QueryStatus status) -> void
+auto QueryHandle::failedAsync(
+    QueryStatus status
+) -> void
 {
     m_query_status = status;
     m_had_error = true;
@@ -348,32 +356,34 @@ auto QueryHandle::close() -> void
 {
     if(m_event_loop != nullptr)
     {
-        uv_close(reinterpret_cast<uv_handle_t*>(&m_poll),          on_uv_close_request_handle_callback);
-        uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_request_handle_callback);
+        uv_close(reinterpret_cast<uv_handle_t*>(&m_poll),          on_uv_close_query_handle_callback);
+        uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
     }
 }
 
-auto on_uv_close_request_handle_callback(uv_handle_t* handle) -> void
+auto on_uv_close_query_handle_callback(
+    uv_handle_t* handle
+) -> void
 {
-    auto* request_handle = static_cast<QueryHandle*>(handle->data);
+    auto* query_handle = static_cast<QueryHandle*>(handle->data);
 
-    if(handle == reinterpret_cast<uv_handle_t*>(&request_handle->m_poll))
+    if(handle == reinterpret_cast<uv_handle_t*>(&query_handle->m_poll))
     {
-        request_handle->m_poll_closed = true;
+        query_handle->m_poll_closed = true;
     }
-    else if(handle == reinterpret_cast<uv_handle_t*>(&request_handle->m_timeout_timer))
+    else if(handle == reinterpret_cast<uv_handle_t*>(&query_handle->m_timeout_timer))
     {
-        request_handle->m_timeout_timer_closed = true;
+        query_handle->m_timeout_timer_closed = true;
     }
 
     /**
      * When all uv handles are closed then it is safe to delete the request handle.
      */
-    if(   request_handle->m_poll_closed
-       && request_handle->m_timeout_timer_closed
+    if(   query_handle->m_poll_closed
+       && query_handle->m_timeout_timer_closed
     )
     {
-        delete request_handle;
+        delete query_handle;
     }
 }
 

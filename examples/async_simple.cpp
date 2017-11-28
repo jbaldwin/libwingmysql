@@ -8,7 +8,7 @@ public:
     auto OnComplete(wing::Query request) -> void
     {
         std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
-        std::cout << wing::query_status2str(request->GetRequestStatus()) << "\n";
+        std::cout << wing::query_status2str(request->GetQueryStatus()) << "\n";
         if(request->HasError())
         {
             std::cout << "Error: " << request->GetError() << "\n";
@@ -49,11 +49,11 @@ int main(int argc, char* argv[])
     std::string user(argv[3]);
     std::string password(argv[4]);
     std::string db(argv[5]);
-    std::string query(argv[6]);
+    std::string mysql_query_string(argv[6]);
 
     wing::startup();
 
-    wing::Connection connection(hostname, port, user, password, db, 0);
+    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
 
     wing::EventLoop event_loop(
         std::make_unique<RequestCallback>(),
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 
     using namespace std::chrono_literals;
     auto& request_pool = event_loop.GetQueryPool();
-    auto request = request_pool.Produce(query, 1000ms);
+    auto request = request_pool.Produce(mysql_query_string, 1000ms);
 
     event_loop.StartQuery(std::move(request));
 

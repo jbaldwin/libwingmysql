@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
     wing::startup();
 
-    wing::Connection connection(hostname, port, user, password, db, 0);
+    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
 
     using namespace std::chrono_literals;
 
