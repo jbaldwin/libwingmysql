@@ -19,6 +19,8 @@ class EventLoop;
 class QueryPool;
 class Query;
 
+using OnCompleteHandler = void(*)(Query);
+
 class QueryHandle
 {
     friend EventLoop;
@@ -31,6 +33,13 @@ public:
     QueryHandle(QueryHandle&&) = default;                       ///< Can move
     auto operator = (const QueryHandle&) = delete;              ///< No copy assign
     auto operator = (QueryHandle&&) -> QueryHandle& = default;  ///< Can move assign
+
+    /**
+     * @param on_complete The on complete function handle for this query.
+     */
+    auto SetOnCompleteHandler(
+        OnCompleteHandler on_complete
+    ) -> void;
 
     /**
      * @return Gets the query status after a completed query.
@@ -151,6 +160,7 @@ private:
         EventLoop* event_loop,
         QueryPool& query_pool,
         const ConnectionInfo& connection,
+        OnCompleteHandler on_complete,
         std::chrono::milliseconds timeout,
         std::string query
     );
@@ -218,6 +228,7 @@ private:
     EventLoop* m_event_loop;            ///< Asynchronous queries will have an event loop. nullptr for synchronous requests.
     QueryPool& m_query_pool;            ///< Every query must have a query pool.
     const ConnectionInfo& m_connection; ///< Connection information for the MySQL server.
+    OnCompleteHandler m_on_complete;    ///< On complete function handler for this query.
 
     uv_poll_t m_poll;                   ///< Asynchronous queries libuv polls tructure for read/write notifications.
     uv_timer_t m_timeout_timer;         ///< libuv timeout for the query.

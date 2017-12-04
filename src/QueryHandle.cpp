@@ -19,12 +19,14 @@ QueryHandle::QueryHandle(
     EventLoop* event_loop,
     QueryPool& query_pool,
     const ConnectionInfo& connection,
+    OnCompleteHandler on_complete,
     std::chrono::milliseconds timeout,
     std::string query
 )
     : m_event_loop(event_loop),
       m_query_pool(query_pool),
       m_connection(connection),
+      m_on_complete(on_complete),
       m_poll(),
       m_timeout_timer(),
       m_timeout(timeout),
@@ -39,7 +41,7 @@ QueryHandle::QueryHandle(
       m_query_status(QueryStatus::BUILDING),
       m_original_query(),
       m_query_buffer(),
-      m_query_parts(m_bind_param_count),
+      m_query_parts(0),
       m_bind_param_count(0),
       m_bind_params(),
       m_poll_closed(false),
@@ -61,6 +63,12 @@ QueryHandle::~QueryHandle()
 {
     freeResult();
     mysql_close(&m_mysql);
+}
+
+auto QueryHandle::SetOnCompleteHandler(
+    OnCompleteHandler on_complete
+) -> void {
+    m_on_complete = on_complete;
 }
 
 auto QueryHandle::GetQueryStatus() const -> QueryStatus

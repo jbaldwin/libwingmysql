@@ -1,5 +1,5 @@
-#include <wing/EventLoop.h>
 #include "wing/QueryPool.h"
+#include "wing/EventLoop.h"
 
 namespace wing
 {
@@ -33,6 +33,14 @@ auto QueryPool::GetConnection() const -> const ConnectionInfo&
 auto QueryPool::Produce(
     const std::string& query,
     std::chrono::milliseconds timeout
+) -> Query {
+    return Produce(query, timeout, nullptr);
+}
+
+auto QueryPool::Produce(
+    const std::string& query,
+    std::chrono::milliseconds timeout,
+    OnCompleteHandler on_complete
 ) -> Query
 {
     m_lock.lock();
@@ -44,6 +52,7 @@ auto QueryPool::Produce(
                 m_event_loop,
                 *this,
                 m_connection,
+                on_complete,
                 timeout,
                 query
             )
@@ -57,8 +66,9 @@ auto QueryPool::Produce(
         m_queries.pop_back();
         m_lock.unlock();
 
-        (*request_handle_ptr).SetTimeout(timeout);
-        (*request_handle_ptr).SetQuery(query);
+        request_handle_ptr->SetOnCompleteHandler(on_complete);
+        request_handle_ptr->SetTimeout(timeout);
+        request_handle_ptr->SetQuery(query);
 
         return Query(std::move(request_handle_ptr));
     }
@@ -72,7 +82,7 @@ auto QueryPool::returnQuery(
     // simply release the memory and close it.
     // libuv will shutdown the poll/timer handles
     // and then delete the request handle.
-    if((*query_handle).HasError())
+    if(query_handle->HasError())
     {
         auto* raw = query_handle.release();
         raw->close();

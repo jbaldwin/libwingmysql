@@ -49,6 +49,12 @@ public:
         const std::string& query,
         std::chrono::milliseconds timeout
     ) -> Query;
+
+    auto Produce(
+        const std::string& query,
+        std::chrono::milliseconds timeout,
+        OnCompleteHandler on_complete
+    ) -> Query;
 private:
     std::mutex m_lock;
     std::deque<QueryHandlePtr> m_queries;

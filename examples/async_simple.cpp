@@ -2,39 +2,35 @@
 
 #include <wing/WingMySQL.h>
 
-class RequestCallback : public wing::IQueryCallback
+static auto on_complete(wing::Query request) -> void
 {
-public:
-    auto OnComplete(wing::Query request) -> void
+    std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
+    std::cout << wing::query_status2str(request->GetQueryStatus()) << "\n";
+    if(request->HasError())
     {
-        std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
-        std::cout << wing::query_status2str(request->GetQueryStatus()) << "\n";
-        if(request->HasError())
+        std::cout << "Error: " << request->GetError() << "\n";
+    }
+    else
+    {
+        std::cout << "Fields count: " << request->GetFieldCount() << "\n";
+        std::cout << "Row count: " << request->GetRowCount() << "\n";
+        for(const auto& row : request->GetRows())
         {
-            std::cout << "Error: " << request->GetError() << "\n";
-        }
-        else
-        {
-            std::cout << "Fields count: " << request->GetFieldCount() << "\n";
-            std::cout << "Row count: " << request->GetRowCount() << "\n";
-            for(const auto& row : request->GetRows())
+            for(const auto& value : row.GetValues())
             {
-                for(const auto& value : row.GetValues())
+                if(value.IsNull())
                 {
-                    if(value.IsNull())
-                    {
-                        std::cout << "NULL ";
-                    }
-                    else
-                    {
-                        std::cout << value.AsString() << " ";
-                    }
+                    std::cout << "NULL ";
                 }
-                std::cout << "\n";
+                else
+                {
+                    std::cout << value.AsString() << " ";
+                }
             }
+            std::cout << "\n";
         }
     }
-};
+}
 
 int main(int argc, char* argv[])
 {
@@ -54,15 +50,11 @@ int main(int argc, char* argv[])
     wing::startup();
 
     wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
-
-    wing::EventLoop event_loop(
-        std::make_unique<RequestCallback>(),
-        connection
-    );
+    wing::EventLoop event_loop(connection);
 
     using namespace std::chrono_literals;
     auto& request_pool = event_loop.GetQueryPool();
-    auto request = request_pool.Produce(mysql_query_string, 1000ms);
+    auto request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
 
     event_loop.StartQuery(std::move(request));
 

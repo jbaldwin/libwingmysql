@@ -1,7 +1,6 @@
 #pragma once
 
 #include "wing/QueryPool.h"
-#include "wing/IQueryCallback.h"
 #include "wing/ConnectionInfo.h"
 
 #include <thread>
@@ -35,11 +34,9 @@ public:
      *         are a lot of queries they will start out bottle necked
      *         on the connect thread.
      *
-     * @param query_callback The user defined callback
      * @param connection The connection information for the MySQL Server.
      */
-    EventLoop(
-        std::unique_ptr<IQueryCallback> query_callback,
+    explicit EventLoop(
         ConnectionInfo connection
     );
 
@@ -80,20 +77,12 @@ public:
 
     /**
      * Starts an asynchronous query.
-     * @param query
-     * @return
+     * @param query The query to start.
+     * @return True if the query started.
      */
     auto StartQuery(
         Query query
     ) -> bool;
-
-    /**
-     * @return The user defined query callback object.
-     * @{
-     */
-    auto GetQueryCallback() -> IQueryCallback&;
-    auto GetQueryCallback() const -> const IQueryCallback&;
-    /** @} */
 
 private:
     QueryPool m_query_pool;
@@ -102,8 +91,6 @@ private:
     std::atomic<bool> m_is_connect_running;
     std::atomic<bool> m_is_stopping;
     std::atomic<uint64_t> m_active_query_count;
-
-    std::unique_ptr<IQueryCallback> m_query_callback;
 
     std::thread m_background_query_thread;
     uv_loop_t* m_query_loop;
@@ -123,6 +110,9 @@ private:
 
     auto run_queries() -> void;
     auto run_connect() -> void;
+
+    auto callOnComplete(Query query) -> void;
+    auto callOnComplete(QueryHandle* query_handle) -> void;
 
     auto onClose(
         uv_handle_t* handle

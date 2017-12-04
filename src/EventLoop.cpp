@@ -28,7 +28,6 @@ auto requests_accept_for_connect_async(
 ) -> void;
 
 EventLoop::EventLoop(
-    std::unique_ptr<IQueryCallback> query_callback,
     ConnectionInfo connection
 )
     : m_query_pool(std::move(connection), this),
@@ -36,7 +35,6 @@ EventLoop::EventLoop(
       m_is_connect_running(false),
       m_is_stopping(false),
       m_active_query_count(0),
-      m_query_callback(std::move(query_callback)),
       m_background_query_thread(),
       m_query_loop(uv_loop_new()),
       m_query_async(),
@@ -143,20 +141,20 @@ auto EventLoop::Stop() -> void
      */
     {
         std::lock_guard<std::mutex> guard(m_pending_queries_lock);
-        for(auto& request : m_pending_queries)
+        for(auto& query : m_pending_queries)
         {
-            request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
-            (*m_query_callback).OnComplete(std::move(request));
+            query->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            callOnComplete(std::move(query));
         }
         m_pending_queries.clear();
     }
 
     {
         std::lock_guard<std::mutex> guard(m_pending_connects_lock);
-        for(auto& request : m_pending_queries)
+        for(auto& query : m_pending_queries)
         {
-            request->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
-            (*m_query_callback).OnComplete(std::move(request));
+            query->failedAsync(QueryStatus::SHUTDOWN_IN_PROGRESS);
+            callOnComplete(std::move(query));
         }
         m_pending_connects.clear();
     }
@@ -200,16 +198,6 @@ auto EventLoop::StartQuery(
     return true;
 }
 
-auto EventLoop::GetQueryCallback() -> IQueryCallback&
-{
-    return *m_query_callback;
-}
-
-auto EventLoop::GetQueryCallback() const -> const IQueryCallback&
-{
-    return *m_query_callback;
-}
-
 auto EventLoop::run_queries() -> void
 {
     mysql_thread_init();
@@ -226,6 +214,16 @@ auto EventLoop::run_connect() -> void
     uv_run(m_connect_loop, UV_RUN_DEFAULT);
     m_is_connect_running = false;
     mysql_thread_end();
+}
+
+auto EventLoop::callOnComplete(Query query) -> void {
+    auto on_complete = query->m_on_complete;
+    on_complete(std::move(query));
+}
+
+auto EventLoop::callOnComplete(QueryHandle* query_handle) -> void {
+    auto on_complete = query_handle->m_on_complete;
+    on_complete(Query(QueryHandlePtr(query_handle)));
 }
 
 auto EventLoop::onClose(
@@ -248,25 +246,23 @@ auto EventLoop::onPoll(
     int events
 ) -> void
 {
-    auto* request_handle = static_cast<QueryHandle*>(handle->data);
+    auto* query_handle = static_cast<QueryHandle*>(handle->data);
 
     switch(static_cast<EventLoop::UVPollEvent>(events)) {
         case UVPollEvent::READABLE: {
-            uv_poll_stop(&request_handle->m_poll);
+            uv_poll_stop(&query_handle->m_poll);
 
-            request_handle->onRead();
+            query_handle->onRead();
             --m_active_query_count;
             // Regardless of the onRead() result the request is done
-            (*m_query_callback).OnComplete(
-                Query(QueryHandlePtr(request_handle))
-            );
+            callOnComplete(query_handle);
         } break;
         case UVPollEvent::WRITEABLE: {
-            if(request_handle->onWrite())
+            if(query_handle->onWrite())
             {
                 // The write succeeded, now poll for the response.
                 uv_poll_start(
-                    &request_handle->m_poll,
+                    &query_handle->m_poll,
                     UV_READABLE | UV_DISCONNECT,
                     on_uv_poll_callback
                 );
@@ -275,17 +271,13 @@ auto EventLoop::onPoll(
             {
                 --m_active_query_count;
                 // If writing failed, notify the client.
-                (*m_query_callback).OnComplete(
-                    Query(QueryHandlePtr(request_handle))
-                );
+                callOnComplete(query_handle);
             }
         } break;
         case UVPollEvent::DISCONNECT: {
-            request_handle->onDisconnect();
+            query_handle->onDisconnect();
             --m_active_query_count;
-            (*m_query_callback).OnComplete(
-                Query(QueryHandlePtr(request_handle))
-            );
+            callOnComplete(query_handle);
         } break;
         case UVPollEvent::PRIORITIZED: {
             // ignored event type
@@ -297,14 +289,12 @@ auto EventLoop::onTimeout(
     uv_timer_t* handle
 ) -> void
 {
-    auto* request_handle = static_cast<QueryHandle*>(handle->data);
+    auto* query_handle = static_cast<QueryHandle*>(handle->data);
 
-    uv_poll_stop(&request_handle->m_poll);
-    request_handle->onTimeout();
+    uv_poll_stop(&query_handle->m_poll);
+    query_handle->onTimeout();
     --m_active_query_count;
-    (*m_query_callback).OnComplete(
-        Query(QueryHandlePtr(request_handle))
-    );
+    callOnComplete(query_handle);
 }
 
 auto EventLoop::requestsAcceptForQueryAsync(
@@ -316,19 +306,19 @@ auto EventLoop::requestsAcceptForQueryAsync(
         m_grabbed_queries.swap(m_pending_queries);
     }
 
-    for(auto& request : m_grabbed_queries)
+    for(auto& query : m_grabbed_queries)
     {
         /**
          * If the request had a connect error simply notify the user.
          */
-        if(   request->HasError()
-           && request->GetQueryStatus() == QueryStatus::CONNECT_FAILURE)
+        if(   query->HasError()
+           && query->GetQueryStatus() == QueryStatus::CONNECT_FAILURE)
         {
-            (*m_query_callback).OnComplete(std::move(request));
+            callOnComplete(std::move(query));
             continue;
         }
 
-        QueryHandle* query_handle = request.m_query_handle.release();
+        QueryHandle* query_handle = query.m_query_handle.release();
         query_handle->startAsync();
         uv_poll_start(
             &query_handle->m_poll,
