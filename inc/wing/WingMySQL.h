@@ -16,6 +16,19 @@ namespace wing
  */
 auto startup() -> void;
 
+/**
+ * Starts up a thread for libwingmysql usage.  This should
+ * be called on each thread of the application before it uses
+ * any libwingmysql functions.
+ */
+auto startup_thread() -> void;
+
+/**
+ * Shuts down a thread for libwingmysql usage.  This should
+ * be called on each thread of the application that used libwingmysql
+ * before terminating.
+ */
+auto shutdown_thread() -> void;
 
 /**
  * Shuts down libwingmysql.  This should be called

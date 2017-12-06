@@ -223,7 +223,7 @@ auto EventLoop::callOnComplete(Query query) -> void {
 
 auto EventLoop::callOnComplete(QueryHandle* query_handle) -> void {
     auto on_complete = query_handle->m_on_complete;
-    on_complete(Query(QueryHandlePtr(query_handle)));
+    on_complete(Query(query_handle));
 }
 
 auto EventLoop::onClose(
@@ -318,7 +318,7 @@ auto EventLoop::requestsAcceptForQueryAsync(
             continue;
         }
 
-        QueryHandle* query_handle = query.m_query_handle.release();
+        QueryHandle* query_handle = query.m_query_handle;
         query_handle->startAsync();
         uv_poll_start(
             &query_handle->m_poll,

@@ -7,12 +7,22 @@ static auto run_query(wing::Query& query) -> void
     auto status = query->Execute();
     if(status == wing::QueryStatus::SUCCESS)
     {
-        std::cout << "Success : fields[" << query->GetFieldCount() << "] rows[" << query->GetRowCount() << "]\n";
-        for(auto& row : query->GetRows())
+        std::cout << "Fields count: " << query->GetFieldCount() << "\n";
+        std::cout << "Row count: " << query->GetRowCount() << "\n";
+        for(size_t row_idx = 0; row_idx < query->GetRowCount(); ++row_idx)
         {
-            for(auto& value : row.GetValues())
+            auto& row = query->GetRow(row_idx);
+            for(size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx)
             {
-                std::cout << value.AsString() << " ";
+                auto& value = row.GetColumn(col_idx);
+                if(value.IsNull())
+                {
+                    std::cout << "NULL ";
+                }
+                else
+                {
+                    std::cout << value.AsString() << " ";
+                }
             }
             std::cout << "\n";
         }

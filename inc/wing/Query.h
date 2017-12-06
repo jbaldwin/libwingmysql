@@ -19,9 +19,9 @@ class Query
 public:
     ~Query();
     Query(const Query&) = delete;                   ///< No copying
-    Query(Query&& from) = default;                  ///< Can move
+    Query(Query&& from);                  ///< Can move
     auto operator = (const Query&) = delete;        ///< No copy assign
-    auto operator = (Query&&) -> Query& = default;  ///< Can move assign
+    auto operator = (Query&&) -> Query&;  ///< Can move assign
 
     /**
      * Access to the SQL Query object.
@@ -35,10 +35,10 @@ public:
     /** @} */
 private:
     explicit Query(
-        std::unique_ptr<QueryHandle> query_handle
+        QueryHandle* query_handle
     );
 
-    std::unique_ptr<QueryHandle> m_query_handle;
+    QueryHandle* m_query_handle;
 };
 
 } // wing

@@ -6,9 +6,9 @@ namespace wing
 
 QueryPool::QueryPool(ConnectionInfo connection)
     : m_lock(),
-      m_queries(),
       m_connection(std::move(connection)),
-      m_event_loop(nullptr)
+      m_event_loop(nullptr),
+      m_queries()
 {
 
 }
@@ -18,11 +18,16 @@ QueryPool::QueryPool(
     EventLoop* event_loop
 )
     : m_lock(),
-      m_queries(),
       m_connection(std::move(connection)),
-      m_event_loop(event_loop)
+      m_event_loop(event_loop),
+      m_queries()
 {
 
+}
+
+QueryPool::~QueryPool()
+{
+    m_queries.clear();
 }
 
 auto QueryPool::GetConnection() const -> const ConnectionInfo&
@@ -47,7 +52,7 @@ auto QueryPool::Produce(
     if(m_queries.empty())
     {
         m_lock.unlock();
-        QueryHandlePtr request_handle_ptr(
+        return Query(
             new QueryHandle(
                 m_event_loop,
                 *this,
@@ -57,12 +62,10 @@ auto QueryPool::Produce(
                 query
             )
         );
-
-        return Query(std::move(request_handle_ptr));
     }
     else
     {
-        auto request_handle_ptr = std::move(m_queries.back());
+        auto* request_handle_ptr = m_queries.back();
         m_queries.pop_back();
         m_lock.unlock();
 
@@ -70,12 +73,12 @@ auto QueryPool::Produce(
         request_handle_ptr->SetTimeout(timeout);
         request_handle_ptr->SetQuery(query);
 
-        return Query(std::move(request_handle_ptr));
+        return Query(request_handle_ptr);
     }
 }
 
 auto QueryPool::returnQuery(
-    QueryHandlePtr query_handle
+    QueryHandle* query_handle
 ) -> void
 {
     // If the handle has had any kind of error while processing
@@ -84,23 +87,21 @@ auto QueryPool::returnQuery(
     // and then delete the request handle.
     if(query_handle->HasError())
     {
-        auto* raw = query_handle.release();
-        raw->close();
+        query_handle->close();
         return;
     }
 
     {
         std::lock_guard<std::mutex> guard(m_lock);
-        m_queries.emplace_back(std::move(query_handle));
+        m_queries.emplace_back(query_handle);
     }
 }
 
 auto QueryPool::close() -> void
 {
-    for(auto& request_handle : m_queries)
+    for(auto* request_handle : m_queries)
     {
-        auto* raw = request_handle.release();
-        raw->close();
+        request_handle->close();
     }
 }
 

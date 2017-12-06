@@ -151,9 +151,10 @@ public:
     auto GetRowCount() const -> size_t;
 
     /**
-     * @return The rows returned from the query.
+     * @param idx The row to fetch.
+     * @return The row.
      */
-    auto GetRows() const -> const std::vector<Row>&;
+    auto GetRow(size_t idx) const -> const Row&;
 
 private:
     QueryHandle(
@@ -214,6 +215,11 @@ private:
     auto onDisconnect() -> void;
 
     /**
+     * Parses the rows from the result.
+     */
+    auto parseRows() -> void;
+
+    /**
      * Frees the previous query result.
      */
     auto freeResult() -> void;
@@ -235,10 +241,10 @@ private:
     std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
     MYSQL m_mysql;
     MYSQL_RES* m_result;
-    mutable bool m_parsed_result;       ///< True if the result has already been parsed (to avoid doing it multiple times).
+    bool m_parsed_result;               ///< True if the result has already been parsed (to avoid doing it multiple times).
     size_t m_field_count;               ///< The number of fields returned from the query.
     size_t m_row_count;                 ///< The number of rows returned from the query.
-    mutable std::vector<Row> m_rows;    ///< User facing rows view.
+    std::vector<Row> m_rows;            ///< User facing rows view.
     bool m_is_connected;                ///< Has this MySQL client connected to the server yet?
     bool m_had_error;                   ///< Has this MySQL client had an error?
 
@@ -268,7 +274,5 @@ private:
         uv_handle_t* handle
     ) -> void; ///< for closing/deleting this handle
 };
-
-using QueryHandlePtr = std::unique_ptr<QueryHandle>;
 
 } // wing

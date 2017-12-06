@@ -19,7 +19,7 @@ class QueryPool
     friend EventLoop;
     friend Query;
 public:
-    ~QueryPool() = default;
+    ~QueryPool();
 
     /**
      * Creates a query pool for running synchronous requests.
@@ -57,9 +57,9 @@ public:
     ) -> Query;
 private:
     std::mutex m_lock;
-    std::deque<QueryHandlePtr> m_queries;
     ConnectionInfo m_connection;
     EventLoop* m_event_loop;
+    std::deque<QueryHandle*> m_queries;
 
     explicit QueryPool(
         ConnectionInfo connection,
@@ -67,7 +67,7 @@ private:
     );
 
     auto returnQuery(
-        QueryHandlePtr query_handle
+        QueryHandle* query_handle
     ) -> void;
 
     auto close() -> void;

@@ -14,10 +14,12 @@ static auto on_complete(wing::Query request) -> void
     {
         std::cout << "Fields count: " << request->GetFieldCount() << "\n";
         std::cout << "Row count: " << request->GetRowCount() << "\n";
-        for(const auto& row : request->GetRows())
+        for(size_t row_idx = 0; row_idx < request->GetRowCount(); ++row_idx)
         {
-            for(const auto& value : row.GetValues())
+            auto& row = request->GetRow(row_idx);
+            for(size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx)
             {
+                auto& value = row.GetColumn(col_idx);
                 if(value.IsNull())
                 {
                     std::cout << "NULL ";

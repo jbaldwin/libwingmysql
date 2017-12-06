@@ -22,17 +22,17 @@ public:
     auto operator = (Row&&) -> Row& = default;      ///< Can move
 
     /**
+     * @return The number of values/columns in this row.
+     */
+    auto GetColumnCount() const -> size_t;
+
+    /**
      * @param idx The value to fetch at this index.
      * @return The specified value at idx.
      */
     auto GetColumn(
         size_t idx
     ) const -> const Value&;
-
-    /**
-     * @return The ordered set of values in this row.
-     */
-    auto GetValues() const -> const std::vector<Value>&;
 
 private:
     Row(
@@ -41,6 +41,7 @@ private:
     );
 
     std::vector<Value> m_values;
+    size_t m_column_count;
 };
 
 } // wing

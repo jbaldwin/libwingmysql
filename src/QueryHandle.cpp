@@ -41,7 +41,7 @@ QueryHandle::QueryHandle(
       m_query_status(QueryStatus::BUILDING),
       m_original_query(),
       m_query_buffer(),
-      m_query_parts(0),
+      m_query_parts(),
       m_bind_param_count(0),
       m_bind_params(),
       m_poll_closed(false),
@@ -51,7 +51,8 @@ QueryHandle::QueryHandle(
     mysql_init(&m_mysql);
     // set the mysql timeout in the for synchronous queries...
     // otherwise timeouts are handled through libuv.
-    unsigned int read_timeout = static_cast<unsigned int>(m_timeout.count());
+    auto timeout_seconds = std::chrono::duration_cast<std::chrono::seconds>(m_timeout);
+    unsigned int read_timeout = static_cast<unsigned int>(timeout_seconds.count());
     mysql_options(&m_mysql, MYSQL_OPT_READ_TIMEOUT, &read_timeout);
     unsigned int connect_timeout = 1;
     mysql_options(&m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
@@ -169,6 +170,7 @@ auto QueryHandle::Execute() -> QueryStatus
             m_query_status = QueryStatus::SUCCESS;
             m_field_count  = mysql_num_fields(m_result);
             m_row_count    = mysql_num_rows(m_result);
+            parseRows();
         }
         else
         {
@@ -202,20 +204,8 @@ auto QueryHandle::GetRowCount() const -> size_t
     return m_row_count;
 }
 
-auto QueryHandle::GetRows() const -> const std::vector<Row>&
-{
-    if(!m_parsed_result) {
-        m_parsed_result = true;
-        m_rows.reserve(GetRowCount());
-        MYSQL_ROW mysql_row = nullptr;
-        while ((mysql_row = mysql_fetch_row(m_result)))
-        {
-            Row row(mysql_row, m_field_count);
-            m_rows.emplace_back(std::move(row));
-        }
-    }
-
-    return m_rows;
+auto QueryHandle::GetRow(size_t idx) const -> const Row& {
+    return m_rows.at(idx);
 }
 
 auto QueryHandle::connect() -> bool
@@ -345,6 +335,21 @@ auto QueryHandle::onTimeout() -> void
 auto QueryHandle::onDisconnect() -> void
 {
     failedAsync(QueryStatus::DISCONNECT);
+}
+
+
+auto QueryHandle::parseRows() -> void
+{
+    if(!m_parsed_result && GetRowCount() > 0) {
+        m_parsed_result = true;
+        m_rows.reserve(GetRowCount());
+        MYSQL_ROW mysql_row = nullptr;
+        while ((mysql_row = mysql_fetch_row(m_result)))
+        {
+            Row row(mysql_row, m_field_count);
+            m_rows.emplace_back(std::move(row));
+        }
+    }
 }
 
 auto QueryHandle::freeResult() -> void
