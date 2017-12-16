@@ -1,8 +1,7 @@
 #pragma once
 
-#include "wing/Types.h"
-
 #include <vector>
+#include <string_view>
 
 namespace wing
 {

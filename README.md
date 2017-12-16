@@ -1,16 +1,16 @@
-libwingmysql - Fast asynchronous C++14 MySQL client.
+libwingmysql - Fast asynchronous C++17 MySQL client.
 ====================================================
 
 Copyright (c) 2017, Josh Baldwin
 
 https://github.com/jbaldwin/libwingmysql
 
-**libwingmysql** is a C++14 client library that provides and easy to use high throughput asynchronous MySQL queries.
+**libwingmysql** is a C++17 client library that provides and easy to use high throughput asynchronous MySQL queries.
 
 **libwingmysql** is licensed under the Apache 2.0 license.
 
 # Overview #
-* Easy and safe to use C++14 client library API, including modern range based for loops and type converting on results.
+* Easy and safe to use C++17 client library API.
 * Synchronous and Asynchronous MySQL query support.
 * Socket pooling for re-using MySQL connections.  Reduces reconnects.
 * EventLoop background query thread for automatically handling inflight asynchronous queries.
@@ -20,7 +20,7 @@ https://github.com/jbaldwin/libwingmysql
 # Usage #
 
 ## Requirements
-    C++14 compiler (g++/clang++)
+    C++17 compiler (g++/clang++)
     CMake 2.8+
     pthreads/std::thread
     libuv
