@@ -14,9 +14,9 @@ namespace wing
  * @return String views into each partition.
  */
 auto split_view(
-    const StringView s,
+    const std::string_view s,
     char delim
-) -> std::vector<StringView>;
+) -> std::vector<std::string_view>;
 
 /**
  * Splits a string view by the delimiter.
@@ -25,8 +25,8 @@ auto split_view(
  * @return String views into each partition.
  */
 auto split_view(
-    const StringView s,
-    const StringView delim
-) -> std::vector<StringView>;
+    const std::string_view s,
+    const std::string_view delim
+) -> std::vector<std::string_view>;
 
 } // wing

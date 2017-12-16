@@ -1,10 +1,10 @@
 #pragma once
 
-#include <experimental/string_view>
+#include <string_view>
 
 namespace wing
 {
 
-using StringView = std::experimental::string_view;
+using StringView = std::string_view;
 
 } // wing

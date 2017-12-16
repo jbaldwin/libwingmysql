@@ -16,10 +16,10 @@ Row::Row(
     for(size_t i = 0; i < field_count; ++i)
     {
         auto* mysql_value = mysql_row[i];
-        StringView data{};
+        std::string_view data{};
         if(mysql_value != nullptr)
         {
-            data = StringView(mysql_value, std::strlen(mysql_value));
+            data = std::string_view(mysql_value, std::strlen(mysql_value));
         }
         Value value(data);
         m_values.emplace_back(value);

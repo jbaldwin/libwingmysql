@@ -16,8 +16,8 @@ ELSE()
     message(FATAL_ERROR "Unsupported compiler ${CMAKE_CXX_COMPILER}")
 ENDIF()
 
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -Weffc++ -Werror -Wpedantic -pedantic-errors -MD ${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -g -gdwarf-2 -D_GLIBCXX_DEBUG")
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Weffc++ -Werror -Wpedantic -pedantic-errors -MD ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -gdwarf-2 -D_GLIBCXX_DEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g -gdwarf-2")
 
 set(LIB_WING_MYSQL_SOURCE_FILES

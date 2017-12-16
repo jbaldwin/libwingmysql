@@ -272,7 +272,7 @@ auto QueryHandle::bindParameters() -> void
 
         for(size_t i = 0; i < m_query_parts.size(); ++i)
         {
-            m_query_buffer.append(m_query_parts[i].to_string());
+            m_query_buffer.append(std::string(m_query_parts[i]));
             // the last query part might be trailing text
             if(i < m_bind_params.size())
             {

@@ -4,19 +4,19 @@ namespace wing
 {
 
 auto split_view(
-    const StringView s,
+    const std::string_view s,
     char delim
-) -> std::vector<StringView>
+) -> std::vector<std::string_view>
 {
-    return split_view(s, StringView{&delim, 1});
+    return split_view(s, std::string_view{&delim, 1});
 }
 
 auto split_view(
-    const StringView s,
-    const StringView delim
-) -> std::vector<StringView> {
+    const std::string_view s,
+    const std::string_view delim
+) -> std::vector<std::string_view> {
 
-    std::vector<StringView> output;
+    std::vector<std::string_view> output;
 
     size_t length;
     size_t start = 0;

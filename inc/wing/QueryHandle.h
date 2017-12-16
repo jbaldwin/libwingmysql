@@ -251,7 +251,7 @@ private:
     QueryStatus m_query_status;             ///< The status of the last query.
     std::string m_original_query;           ///< The originally provided SQL query string - no bound parameters.
     std::string m_query_buffer;             ///< Buffer for binding parameters.
-    std::vector<StringView> m_query_parts;  ///< The query parts before/after a parameter '?'.
+    std::vector<std::string_view> m_query_parts;  ///< The query parts before/after a parameter '?'.
     size_t m_bind_param_count;              ///< The number of parameters to bind to this query.
     std::vector<std::string> m_bind_params; ///< The escaped and stringified bind parameters.
 
