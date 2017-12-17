@@ -46,7 +46,8 @@ QueryHandle::QueryHandle(
       m_bind_params(),
       m_poll_closed(false),
       m_timeout_timer_closed(false),
-      m_converter()
+      m_converter(),
+      m_user_data(nullptr)
 {
     mysql_init(&m_mysql);
     // set the mysql timeout in the for synchronous queries...
@@ -204,8 +205,19 @@ auto QueryHandle::GetRowCount() const -> size_t
     return m_row_count;
 }
 
-auto QueryHandle::GetRow(size_t idx) const -> const Row& {
+auto QueryHandle::GetRow(size_t idx) const -> const Row&
+{
     return m_rows.at(idx);
+}
+
+auto QueryHandle::SetUserData(void* user_data) -> void
+{
+    m_user_data = user_data;
+}
+
+auto QueryHandle::GetUserData() const -> void*
+{
+    return m_user_data;
 }
 
 auto QueryHandle::connect() -> bool
@@ -309,8 +321,8 @@ auto QueryHandle::onRead() -> bool
 
     uv_timer_stop(&m_timeout_timer);
     m_query_status = QueryStatus::SUCCESS;
-    m_field_count    = mysql_num_fields(m_result);
-    m_row_count      = mysql_num_rows(m_result);
+    m_field_count  = mysql_num_fields(m_result);
+    m_row_count    = mysql_num_rows(m_result);
     return true;
 }
 

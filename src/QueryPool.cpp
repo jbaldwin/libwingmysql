@@ -72,6 +72,7 @@ auto QueryPool::Produce(
         request_handle_ptr->SetOnCompleteHandler(on_complete);
         request_handle_ptr->SetTimeout(timeout);
         request_handle_ptr->SetQuery(query);
+        request_handle_ptr->SetUserData(nullptr); // reset user data too
 
         return Query(request_handle_ptr);
     }

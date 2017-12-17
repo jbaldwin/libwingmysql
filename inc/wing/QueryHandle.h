@@ -156,6 +156,16 @@ public:
      */
     auto GetRow(size_t idx) const -> const Row&;
 
+    /**
+     * @param user_data Sets a user defined data pointer for this query.
+     */
+    auto SetUserData(void* user_data) -> void;
+
+    /**
+     * @return Gets the user defined data pointer for this query.
+     */
+    auto GetUserData() const -> void*;
+
 private:
     QueryHandle(
         EventLoop* event_loop,
@@ -259,6 +269,8 @@ private:
     bool m_timeout_timer_closed;    ///< libuv flag to know when the timeout timer has been closed.
 
     std::stringstream m_converter;  ///< Convert non-string bind parameters into strings.
+
+    void* m_user_data;              ///< User provided data.
 
     friend auto on_uv_poll_callback(
         uv_poll_t* handle,
