@@ -248,6 +248,7 @@ private:
 
     uv_poll_t m_poll;                   ///< Asynchronous queries libuv polls tructure for read/write notifications.
     uv_timer_t m_timeout_timer;         ///< libuv timeout for the query.
+    bool m_timeout_timer_initialized;   ///< Has the timeout timer been initialized?
     std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
     MYSQL m_mysql;
     MYSQL_RES* m_result;

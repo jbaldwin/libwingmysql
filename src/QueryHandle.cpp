@@ -29,6 +29,7 @@ QueryHandle::QueryHandle(
       m_on_complete(on_complete),
       m_poll(),
       m_timeout_timer(),
+      m_timeout_timer_initialized(false),
       m_timeout(timeout),
       m_mysql(),
       m_result(nullptr),
@@ -248,6 +249,7 @@ auto QueryHandle::connect() -> bool
             m_poll.data = this;
 
             uv_timer_init(m_event_loop->m_query_loop, &m_timeout_timer);
+            m_timeout_timer_initialized = true;
             m_timeout_timer.data = this;
         }
 
@@ -300,7 +302,11 @@ auto QueryHandle::failedAsync(
 {
     m_query_status = status;
     m_had_error = true;
-    uv_timer_stop(&m_timeout_timer);
+    if(m_timeout_timer_initialized)
+    {
+        m_timeout_timer_initialized = false;
+        uv_timer_stop(&m_timeout_timer);
+    }
 }
 
 auto QueryHandle::onRead() -> bool
@@ -348,7 +354,6 @@ auto QueryHandle::onDisconnect() -> void
 {
     failedAsync(QueryStatus::DISCONNECT);
 }
-
 
 auto QueryHandle::parseRows() -> void
 {
