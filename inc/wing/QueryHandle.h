@@ -269,6 +269,7 @@ private:
 
     bool m_poll_closed;             ///< libuv flag to know when the poller has been closed.
     bool m_timeout_timer_closed;    ///< libuv flag to know when the timeout timer has been closed.
+    bool m_close_called;            ///< the close function has been called, don't do it twice
 
     std::stringstream m_converter;  ///< Convert non-string bind parameters into strings.
 

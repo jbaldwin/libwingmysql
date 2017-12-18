@@ -47,6 +47,7 @@ QueryHandle::QueryHandle(
       m_bind_params(),
       m_poll_closed(false),
       m_timeout_timer_closed(false),
+      m_close_called(false),
       m_converter(),
       m_user_data(nullptr)
 {
@@ -66,6 +67,8 @@ QueryHandle::~QueryHandle()
 {
     freeResult();
     mysql_close(&m_mysql);
+    m_query_parts.clear();
+    m_bind_params.clear();
 }
 
 auto QueryHandle::SetOnCompleteHandler(
@@ -246,6 +249,7 @@ auto QueryHandle::connect() -> bool
         if(m_event_loop != nullptr)
         {
             uv_poll_init_socket(m_event_loop->m_query_loop, &m_poll, m_mysql.net.fd);
+            m_poll_initialized = true;
             m_poll.data = this;
 
             uv_timer_init(m_event_loop->m_query_loop, &m_timeout_timer);
@@ -329,6 +333,7 @@ auto QueryHandle::onRead() -> bool
     m_query_status = QueryStatus::SUCCESS;
     m_field_count  = mysql_num_fields(m_result);
     m_row_count    = mysql_num_rows(m_result);
+    parseRows();
     return true;
 }
 
@@ -385,30 +390,34 @@ auto QueryHandle::freeResult() -> void
 
 auto QueryHandle::close() -> void
 {
-    if(m_event_loop != nullptr)
+    if(!m_close_called)
     {
-        if(!m_poll_initialized && !m_timeout_timer_initialized)
+        m_close_called = true;
+        if(m_event_loop != nullptr)
         {
-            // this request never even connected and thus its libuv data structures are unintialized
-            delete this;
-            return;
-        }
+            if(!m_poll_initialized && !m_timeout_timer_initialized)
+            {
+                // this request never even connected and thus its libuv data structures are unintialized
+                delete this;
+                return;
+            }
 
-        if(m_timeout_timer_initialized)
-        {
-            uv_close(reinterpret_cast<uv_handle_t*>(&m_poll), on_uv_close_query_handle_callback);
-            m_timeout_timer_initialized = false;
+            if(m_timeout_timer_initialized)
+            {
+                uv_close(reinterpret_cast<uv_handle_t*>(&m_poll), on_uv_close_query_handle_callback);
+                m_timeout_timer_initialized = false;
+            }
+            if(m_poll_initialized)
+            {
+                uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
+                m_poll_initialized = false;
+            }
         }
-        if(m_poll_initialized)
+        else
         {
-            uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
-            m_poll_initialized = false;
+            // This is a synchronous request query handle and has no libuv data structures.
+            delete this;
         }
-    }
-    else
-    {
-        // This is a synchronous request query handle and has no libuv data structures.
-        delete this;
     }
 }
 
