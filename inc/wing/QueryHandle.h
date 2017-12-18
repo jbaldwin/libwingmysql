@@ -247,9 +247,9 @@ private:
     OnCompleteHandler m_on_complete;    ///< On complete function handler for this query.
 
     uv_poll_t m_poll;                   ///< Asynchronous queries libuv polls tructure for read/write notifications.
-    bool m_poll_initialized;            ///< Has the poll structure been initialized?
+    bool m_poll_uv_close_called;            ///< Has the poll had its libuv close called?
     uv_timer_t m_timeout_timer;         ///< libuv timeout for the query.
-    bool m_timeout_timer_initialized;   ///< Has the timeout timer been initialized?
+    bool m_timeout_timer_uv_close_called;   ///< Has the timeout timer had its libuv close called?
     std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
     MYSQL m_mysql;
     MYSQL_RES* m_result;

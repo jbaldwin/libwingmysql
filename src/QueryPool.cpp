@@ -100,10 +100,12 @@ auto QueryPool::returnQuery(
 
 auto QueryPool::close() -> void
 {
+    std::lock_guard<std::mutex> guard(m_lock);
     for(auto* request_handle : m_queries)
     {
         request_handle->close();
     }
+    m_queries.clear();
 }
 
 } // wing

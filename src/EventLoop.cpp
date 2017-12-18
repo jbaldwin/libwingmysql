@@ -83,9 +83,35 @@ auto EventLoop::GetActiveQueryCount() const -> uint64_t
     return m_active_query_count;
 }
 
+static auto walk_cb(uv_handle_t* handle, void* /*arg*/) -> void {
+    switch(handle->type) {
+
+        case UV_UNKNOWN_HANDLE:break;
+        case UV_ASYNC:break;
+        case UV_CHECK:break;
+        case UV_FS_EVENT:break;
+        case UV_FS_POLL:break;
+        case UV_HANDLE:break;
+        case UV_IDLE:break;
+        case UV_NAMED_PIPE:break;
+        case UV_POLL:break;
+        case UV_PREPARE:break;
+        case UV_PROCESS:break;
+        case UV_STREAM:break;
+        case UV_TCP:break;
+        case UV_TIMER:break;
+        case UV_TTY:break;
+        case UV_UDP:break;
+        case UV_SIGNAL:break;
+        case UV_FILE:break;
+        case UV_HANDLE_TYPE_MAX:break;
+    }
+}
+
 auto EventLoop::Stop() -> void
 {
     m_is_stopping = true;
+
     uv_stop(m_query_loop);
     uv_stop(m_connect_loop);
     uv_async_send(&m_query_async);
@@ -93,48 +119,6 @@ auto EventLoop::Stop() -> void
 
     m_background_query_thread.join();
     m_background_connect_thread.join();
-
-    uv_close(reinterpret_cast<uv_handle_t*>(&m_query_async), uv_close_event_loop_callback);
-    uv_close(reinterpret_cast<uv_handle_t*>(&m_connect_async), uv_close_event_loop_callback);
-
-    while(!m_query_async_closed)
-    {
-        uv_run(m_query_loop, UV_RUN_ONCE);
-    }
-    while(!m_connect_async_closed)
-    {
-        uv_run(m_connect_loop, UV_RUN_ONCE);
-    }
-
-    m_query_pool.close();
-
-    while(true)
-    {
-        auto close_retval = uv_loop_close(m_query_loop);
-        if(close_retval == 0)
-        {
-            break;
-        }
-        else
-        {
-            uv_run(m_query_loop, UV_RUN_ONCE);
-            std::this_thread::sleep_for(1ms);
-        }
-    }
-
-    while(true)
-    {
-        auto close_retval = uv_loop_close(m_connect_loop);
-        if(close_retval == 0)
-        {
-            break;
-        }
-        else
-        {
-            uv_run(m_connect_loop, UV_RUN_ONCE);
-            std::this_thread::sleep_for(1ms);
-        }
-    }
 
     /**
      * Clear out any pending / connecting requests.
@@ -157,6 +141,54 @@ auto EventLoop::Stop() -> void
             callOnComplete(std::move(query));
         }
         m_pending_connects.clear();
+    }
+
+    uv_close(reinterpret_cast<uv_handle_t*>(&m_query_async),   uv_close_event_loop_callback);
+    uv_close(reinterpret_cast<uv_handle_t*>(&m_connect_async), uv_close_event_loop_callback);
+
+    while(!m_query_async_closed)
+    {
+        uv_async_send(&m_query_async);
+        uv_run(m_query_loop, UV_RUN_ONCE);
+    }
+    while(!m_connect_async_closed)
+    {
+        uv_async_send(&m_connect_async);
+        uv_run(m_connect_loop, UV_RUN_ONCE);
+    }
+
+    while(true)
+    {
+        /**
+         * Must be done last so the QueryHandles do not destruct before letting the client know
+         * the queries are being shutdown.
+         */
+        m_query_pool.close();
+        auto close_retval = uv_loop_close(m_query_loop);
+        if(close_retval == 0)
+        {
+            break;
+        }
+        else
+        {
+            uv_walk(m_query_loop, walk_cb, nullptr);
+            uv_run(m_query_loop, UV_RUN_ONCE);
+            std::this_thread::sleep_for(1ms);
+        }
+    }
+
+    while(true)
+    {
+        auto close_retval = uv_loop_close(m_connect_loop);
+        if(close_retval == 0)
+        {
+            break;
+        }
+        else
+        {
+            uv_run(m_connect_loop, UV_RUN_ONCE);
+            std::this_thread::sleep_for(1ms);
+        }
     }
 }
 
@@ -318,7 +350,14 @@ auto EventLoop::requestsAcceptForQueryAsync(
             continue;
         }
 
+        /**
+         * libuv is taking this request over, this is important to null out the
+         * Query.m_query_handle so it doesn't keep pushing back into the QueryPool
+         * the same pointer.  Effectively this is a manual std::move() into libuv.
+         */
         QueryHandle* query_handle = query.m_query_handle;
+        query.m_query_handle = nullptr;
+
         query_handle->startAsync();
         uv_poll_start(
             &query_handle->m_poll,

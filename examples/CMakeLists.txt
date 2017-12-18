@@ -19,6 +19,13 @@ set(ASYNC_SIMPLE_SOURCE_FILES
 add_executable(async_simple ${ASYNC_SIMPLE_SOURCE_FILES})
 target_link_libraries(async_simple PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
 
+### async_benchmarket ###
+set(ASYNC_BENCHMARKET_SOURCE_FILES
+    examples/async_benchmark.cpp
+)
+add_executable(async_benchmark ${ASYNC_BENCHMARKET_SOURCE_FILES})
+target_link_libraries(async_benchmark PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
+
 ### bind ###
 set(BIND_SOURCE_FILES
     examples/bind.cpp

@@ -28,8 +28,9 @@ QueryHandle::QueryHandle(
       m_connection(connection),
       m_on_complete(on_complete),
       m_poll(),
+      m_poll_uv_close_called(false),
       m_timeout_timer(),
-      m_timeout_timer_initialized(false),
+      m_timeout_timer_uv_close_called(false),
       m_timeout(timeout),
       m_mysql(),
       m_result(nullptr),
@@ -249,11 +250,9 @@ auto QueryHandle::connect() -> bool
         if(m_event_loop != nullptr)
         {
             uv_poll_init_socket(m_event_loop->m_query_loop, &m_poll, m_mysql.net.fd);
-            m_poll_initialized = true;
             m_poll.data = this;
 
             uv_timer_init(m_event_loop->m_query_loop, &m_timeout_timer);
-            m_timeout_timer_initialized = true;
             m_timeout_timer.data = this;
         }
 
@@ -306,9 +305,8 @@ auto QueryHandle::failedAsync(
 {
     m_query_status = status;
     m_had_error = true;
-    if(m_timeout_timer_initialized)
+    if(m_event_loop != nullptr && m_is_connected)
     {
-        m_timeout_timer_initialized = false;
         uv_timer_stop(&m_timeout_timer);
     }
 }
@@ -395,22 +393,22 @@ auto QueryHandle::close() -> void
         m_close_called = true;
         if(m_event_loop != nullptr)
         {
-            if(!m_poll_initialized && !m_timeout_timer_initialized)
+            if(!m_is_connected)
             {
-                // this request never even connected and thus its libuv data structures are unintialized
+                // this request never even connected and thus its libuv data structures are uninitialized
                 delete this;
                 return;
             }
 
-            if(m_timeout_timer_initialized)
+            if(!m_poll_uv_close_called)
             {
                 uv_close(reinterpret_cast<uv_handle_t*>(&m_poll), on_uv_close_query_handle_callback);
-                m_timeout_timer_initialized = false;
+                m_poll_uv_close_called = true;
             }
-            if(m_poll_initialized)
+            if(!m_timeout_timer_uv_close_called)
             {
                 uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
-                m_poll_initialized = false;
+                m_timeout_timer_uv_close_called = true;
             }
         }
         else

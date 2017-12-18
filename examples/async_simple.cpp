@@ -57,10 +57,17 @@ int main(int argc, char* argv[])
     using namespace std::chrono_literals;
     auto& request_pool = event_loop.GetQueryPool();
     auto request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
-
     event_loop.StartQuery(std::move(request));
 
-    std::this_thread::sleep_for(1000ms);
+    std::this_thread::sleep_for(250ms);
+    while(event_loop.GetActiveQueryCount() > 0)
+    {
+        std::this_thread::sleep_for(100ms);
+    }
+
+    request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+    event_loop.StartQuery(std::move(request));
+    std::this_thread::sleep_for(250ms);
     while(event_loop.GetActiveQueryCount() > 0)
     {
         std::this_thread::sleep_for(100ms);
