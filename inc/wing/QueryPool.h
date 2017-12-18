@@ -46,12 +46,12 @@ public:
      * @return A Query handle.
      */
     auto Produce(
-        const std::string& query,
+        std::string query,
         std::chrono::milliseconds timeout
     ) -> Query;
 
     auto Produce(
-        const std::string& query,
+        std::string query,
         std::chrono::milliseconds timeout,
         OnCompleteHandler on_complete
     ) -> Query;

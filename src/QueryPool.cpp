@@ -36,14 +36,14 @@ auto QueryPool::GetConnection() const -> const ConnectionInfo&
 }
 
 auto QueryPool::Produce(
-    const std::string& query,
+    std::string query,
     std::chrono::milliseconds timeout
 ) -> Query {
-    return Produce(query, timeout, nullptr);
+    return Produce(std::move(query), timeout, nullptr);
 }
 
 auto QueryPool::Produce(
-    const std::string& query,
+    std::string query,
     std::chrono::milliseconds timeout,
     OnCompleteHandler on_complete
 ) -> Query
@@ -59,22 +59,22 @@ auto QueryPool::Produce(
                 m_connection,
                 on_complete,
                 timeout,
-                query
+                std::move(query)
             )
         );
     }
     else
     {
-        auto* request_handle_ptr = m_queries.back();
+        auto* request_handle = m_queries.back();
         m_queries.pop_back();
         m_lock.unlock();
 
-        request_handle_ptr->SetOnCompleteHandler(on_complete);
-        request_handle_ptr->SetTimeout(timeout);
-        request_handle_ptr->SetQuery(query);
-        request_handle_ptr->SetUserData(nullptr); // reset user data too
+        request_handle->SetOnCompleteHandler(on_complete);
+        request_handle->SetTimeout(timeout);
+        request_handle->SetQuery(std::move(query));
+        request_handle->SetUserData(nullptr); // reset user data too
 
-        return Query(request_handle_ptr);
+        return Query(request_handle);
     }
 }
 

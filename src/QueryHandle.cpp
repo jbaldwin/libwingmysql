@@ -355,6 +355,7 @@ auto QueryHandle::onDisconnect() -> void
     failedAsync(QueryStatus::DISCONNECT);
 }
 
+
 auto QueryHandle::parseRows() -> void
 {
     if(!m_parsed_result && GetRowCount() > 0) {
@@ -386,8 +387,28 @@ auto QueryHandle::close() -> void
 {
     if(m_event_loop != nullptr)
     {
-        uv_close(reinterpret_cast<uv_handle_t*>(&m_poll),          on_uv_close_query_handle_callback);
-        uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
+        if(!m_poll_initialized && !m_timeout_timer_initialized)
+        {
+            // this request never even connected and thus its libuv data structures are unintialized
+            delete this;
+            return;
+        }
+
+        if(m_timeout_timer_initialized)
+        {
+            uv_close(reinterpret_cast<uv_handle_t*>(&m_poll), on_uv_close_query_handle_callback);
+            m_timeout_timer_initialized = false;
+        }
+        if(m_poll_initialized)
+        {
+            uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
+            m_poll_initialized = false;
+        }
+    }
+    else
+    {
+        // This is a synchronous request query handle and has no libuv data structures.
+        delete this;
     }
 }
 
