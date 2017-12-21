@@ -29,7 +29,7 @@ static auto run_query(wing::Query& query) -> void
     }
     else
     {
-        std::cout << "An error occurred: " << wing::query_status2str(status) << "\n";
+        std::cout << "An error occurred: " << wing::to_string(status) << "\n";
     }
 }
 

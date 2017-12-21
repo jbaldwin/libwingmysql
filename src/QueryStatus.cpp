@@ -10,11 +10,12 @@ const std::string QUERY_STATUS_CONNECT_FAILURE      = "CONNECT_FAILURE";
 const std::string QUERY_STATUS_SUCCESS              = "SUCCESS";
 const std::string QUERY_STATUS_WRITE_FAILURE        = "WRITE_FAILURE";
 const std::string QUERY_STATUS_READ_FAILURE         = "READ_FAILURE";
+const std::string QUERY_STATUS_STORE_FAILURE        = "STORE_FAILURE";
 const std::string QUERY_STATUS_TIMEOUT              = "TIMEOUT";
 const std::string QUERY_STATUS_DISCONNECT           = "DISCONNECT";
 const std::string QUERY_STATUS_SHUTDOWN_IN_PROGRESS = "SHUTDOWN_IN_PROGRESS";
 
-auto query_status2str(
+auto to_string(
     QueryStatus status
 ) -> const std::string&
 {
@@ -32,6 +33,8 @@ auto query_status2str(
             return QUERY_STATUS_WRITE_FAILURE;
         case QueryStatus::READ_FAILURE:
             return QUERY_STATUS_READ_FAILURE;
+        case QueryStatus::STORE_FAILURE:
+            return QUERY_STATUS_STORE_FAILURE;
         case QueryStatus::TIMEOUT:
             return QUERY_STATUS_TIMEOUT;
         case QueryStatus::DISCONNECT:

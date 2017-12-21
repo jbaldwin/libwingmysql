@@ -36,6 +36,7 @@ set(LIB_WING_MYSQL_SOURCE_FILES
 add_library(${PROJECT_NAME} STATIC ${LIB_WING_MYSQL_SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE /usr/include/mysql)
+#target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SSL_INCLUDE})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     uv
@@ -44,6 +45,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     m
     rt
     dl
+    z
+    ssl
+    crypto
 )
 
 include(examples/CMakeLists.txt)

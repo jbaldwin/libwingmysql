@@ -10,25 +10,25 @@ set(SYNCH_SIMPLE_SOURCE_FILES
     examples/sync_simple.cpp
 )
 add_executable(sync_simple ${SYNCH_SIMPLE_SOURCE_FILES})
-target_link_libraries(sync_simple PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
+target_link_libraries(sync_simple PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl ssl crypto)
 
 ### async_simple ###
 set(ASYNC_SIMPLE_SOURCE_FILES
     examples/async_simple.cpp
 )
 add_executable(async_simple ${ASYNC_SIMPLE_SOURCE_FILES})
-target_link_libraries(async_simple PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
+target_link_libraries(async_simple PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl ssl crypto)
 
 ### async_benchmarket ###
 set(ASYNC_BENCHMARKET_SOURCE_FILES
     examples/async_benchmark.cpp
 )
 add_executable(async_benchmark ${ASYNC_BENCHMARKET_SOURCE_FILES})
-target_link_libraries(async_benchmark PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
+target_link_libraries(async_benchmark PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl ssl crypto)
 
 ### bind ###
 set(BIND_SOURCE_FILES
     examples/bind.cpp
 )
 add_executable(bind ${BIND_SOURCE_FILES})
-target_link_libraries(bind PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl)
+target_link_libraries(bind PRIVATE wingmysql uv ${MYSQL_CLIENT} pthread m rt dl ssl crypto)

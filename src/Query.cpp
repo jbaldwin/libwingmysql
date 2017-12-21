@@ -22,8 +22,8 @@ Query::~Query()
 }
 
 Query::Query(Query&& from)
+    : m_query_handle(from.m_query_handle)
 {
-    m_query_handle = from.m_query_handle;
     from.m_query_handle = nullptr;
 }
 

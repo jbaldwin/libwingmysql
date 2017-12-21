@@ -13,6 +13,7 @@ enum class QueryStatus
     CONNECT_FAILURE,        ///< The query failed to connect to the server.
     WRITE_FAILURE,          ///< The query failed to write the query to the server.
     READ_FAILURE,           ///< The query failed to read the returned data.
+    STORE_FAILURE,          ///< The query failed to store the returned data.
     TIMEOUT,                ///< The query timed out.
     DISCONNECT,             ///< The MySQL server disconnected.
     SHUTDOWN_IN_PROGRESS    ///< The event loop is shutting down.
@@ -23,7 +24,7 @@ enum class QueryStatus
  * @param status The query status.
  * @return string
  */
-auto query_status2str(
+auto to_string(
     QueryStatus status
 ) -> const std::string&;
 

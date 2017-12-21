@@ -5,7 +5,7 @@
 static auto on_complete(wing::Query request) -> void
 {
     std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
-    std::cout << wing::query_status2str(request->GetQueryStatus()) << "\n";
+    std::cout << wing::to_string(request->GetQueryStatus()) << "\n";
     if(request->HasError())
     {
         std::cout << "Error: " << request->GetError() << "\n";

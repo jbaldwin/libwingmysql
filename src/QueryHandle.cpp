@@ -313,6 +313,8 @@ auto QueryHandle::failedAsync(
 
 auto QueryHandle::onRead() -> bool
 {
+    uv_timer_stop(&m_timeout_timer);
+
     auto success = (0 == mysql_read_query_result(&m_mysql));
     if(!success)
     {
@@ -323,11 +325,10 @@ auto QueryHandle::onRead() -> bool
     m_result = mysql_store_result(&m_mysql);
     if(m_result == nullptr)
     {
-        failedAsync(QueryStatus::READ_FAILURE);
+        failedAsync(QueryStatus::STORE_FAILURE);
         return false;
     }
 
-    uv_timer_stop(&m_timeout_timer);
     m_query_status = QueryStatus::SUCCESS;
     m_field_count  = mysql_num_fields(m_result);
     m_row_count    = mysql_num_rows(m_result);
