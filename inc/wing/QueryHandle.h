@@ -187,42 +187,9 @@ private:
     auto connect() -> bool;
 
     /**
-     * Initializes various fields for an asynchronous query.
-     */
-    auto startAsync() -> void;
-
-    /**
      * Escapes (strings) and binds parameters to the template query.
      */
     auto bindParameters() -> void;
-
-    /**
-     * Called when an asynchronous query fails.
-     * @param status The reason why the query failed.
-     */
-    auto failedAsync(QueryStatus status) -> void;
-
-    /**
-     * Called when the socket has data to read (query is finished).
-     * @return True if the contents were read successfully.
-     */
-    auto onRead() -> bool;
-
-    /**
-     * Called when the socket can send a query to the MySQL server.
-     * @return True if the query was written successfully.
-     */
-    auto onWrite() -> bool;
-
-    /**
-     * Called when the query has timed out.
-     */
-    auto onTimeout() -> void;
-
-    /**
-     * Called when the socket is disconnected by the MySQL server.
-     */
-    auto onDisconnect() -> void;
 
     /**
      * Parses the rows from the result.
@@ -234,22 +201,11 @@ private:
      */
     auto freeResult() -> void;
 
-    /**
-     * For asynchronous queries the libuv internals must be cleaned up
-     * before destructing the object.  This will tell libuv to cleanup
-     * its resources, and then in its callback will delete this object.
-     */
-    auto close() -> void;
-
     EventLoop* m_event_loop;            ///< Asynchronous queries will have an event loop. nullptr for synchronous requests.
     QueryPool& m_query_pool;            ///< Every query must have a query pool.
     const ConnectionInfo& m_connection; ///< Connection information for the MySQL server.
     OnCompleteHandler m_on_complete;    ///< On complete function handler for this query.
 
-    uv_poll_t m_poll;                   ///< Asynchronous queries libuv polls tructure for read/write notifications.
-    bool m_poll_uv_close_called;            ///< Has the poll had its libuv close called?
-    uv_timer_t m_timeout_timer;         ///< libuv timeout for the query.
-    bool m_timeout_timer_uv_close_called;   ///< Has the timeout timer had its libuv close called?
     std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
     MYSQL m_mysql;
     MYSQL_RES* m_result;
@@ -267,27 +223,18 @@ private:
     size_t m_bind_param_count;              ///< The number of parameters to bind to this query.
     std::vector<std::string> m_bind_params; ///< The escaped and stringified bind parameters.
 
-    bool m_poll_closed;             ///< libuv flag to know when the poller has been closed.
-    bool m_timeout_timer_closed;    ///< libuv flag to know when the timeout timer has been closed.
-    bool m_close_called;            ///< the close function has been called, don't do it twice
-
     std::stringstream m_converter;  ///< Convert non-string bind parameters into strings.
 
     void* m_user_data;              ///< User provided data.
 
-    friend auto on_uv_poll_callback(
-        uv_poll_t* handle,
-        int status,
-        int events
-    ) -> void; ///< for grabbing the event loop.
+    friend auto on_uv_query_execute_callback(
+        uv_work_t* req
+    ) -> void;
 
-    friend auto on_uv_timeout_callback(
-        uv_timer_t* handle
-    ) -> void; ///< for grabbing the event loop.
-
-    friend auto on_uv_close_query_handle_callback(
-        uv_handle_t* handle
-    ) -> void; ///< for closing/deleting this handle
+    friend auto on_complete_uv_query_execute_callback(
+        uv_work_t* req,
+        int status
+    ) -> void;
 };
 
 } // wing

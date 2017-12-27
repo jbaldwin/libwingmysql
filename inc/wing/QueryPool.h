@@ -59,7 +59,7 @@ private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
     EventLoop* m_event_loop;
-    std::deque<QueryHandle*> m_queries;
+    std::deque<std::unique_ptr<QueryHandle>> m_queries;
 
     explicit QueryPool(
         ConnectionInfo connection,
@@ -67,7 +67,7 @@ private:
     );
 
     auto returnQuery(
-        QueryHandle* query_handle
+        std::unique_ptr<QueryHandle> query_handle
     ) -> void;
 
     auto close() -> void;

@@ -44,7 +44,9 @@ public:
     /** @} */
 
 private:
-    explicit Value(std::string_view data);
+    explicit Value(
+        std::string_view data
+    );
 
     std::string_view m_data;
 };

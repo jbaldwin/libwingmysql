@@ -6,6 +6,17 @@
 static std::atomic<uint64_t> count{0};
 static std::atomic<uint64_t> errors{0};
 
+static std::chrono::seconds duration;
+static size_t connections;
+static std::string hostname;
+static uint16_t port;
+static std::string user;
+static std::string password;
+static std::string db;
+static std::string mysql_query_string;
+
+using namespace std::chrono_literals;
+
 static auto print_stats(
     uint64_t duration_s,
     uint64_t threads,
@@ -31,13 +42,21 @@ static auto on_complete(wing::Query request) -> void
     if(request->HasError())
     {
         ++errors;
+        std::cout << "ERROR: " << wing::to_string(request->GetQueryStatus()) << " " << request->GetError() << "\n";
     }
 
-    // if the request status was good continue
+    auto* event_loop = static_cast<wing::EventLoop*>(request->GetUserData());
     if(request->GetQueryStatus() == wing::QueryStatus::SUCCESS)
     {
-        auto* event_loop = static_cast<wing::EventLoop*>(request->GetUserData());
         event_loop->StartQuery(std::move(request));
+    }
+    else
+    {
+        auto& request_pool = event_loop->GetQueryPool();
+        request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+        request->SetUserData(event_loop);
+        event_loop->StartQuery(std::move(request));
+
     }
 }
 
@@ -49,14 +68,14 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    auto duration = std::chrono::seconds(std::stoul(argv[1]));
-    size_t connections = std::stoul(argv[2]);
-    std::string hostname(argv[3]);
-    uint16_t port = static_cast<uint16_t>(std::stoi(argv[4]));
-    std::string user(argv[5]);
-    std::string password(argv[6]);
-    std::string db(argv[7]);
-    std::string mysql_query_string(argv[8]);
+    duration = std::chrono::seconds(std::stoul(argv[1]));
+    connections = std::stoul(argv[2]);
+    hostname = (argv[3]);
+    port = static_cast<uint16_t>(std::stoi(argv[4]));
+    user = (argv[5]);
+    password = (argv[6]);
+    db = (argv[7]);
+    mysql_query_string = (argv[8]);
 
     wing::startup();
 
@@ -64,7 +83,6 @@ int main(int argc, char* argv[])
     wing::EventLoop event_loop(connection);
     auto& request_pool = event_loop.GetQueryPool();
 
-    using namespace std::chrono_literals;
     for(size_t i = 0; i < connections; ++i) {
         auto request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
         request->SetUserData(&event_loop);

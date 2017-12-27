@@ -5,7 +5,9 @@
 namespace wing
 {
 
-Value::Value(std::string_view data)
+Value::Value(
+    std::string_view data
+)
     : m_data(data)
 {
 

@@ -4,7 +4,9 @@
 namespace wing
 {
 
-QueryPool::QueryPool(ConnectionInfo connection)
+QueryPool::QueryPool(
+    ConnectionInfo connection
+)
     : m_lock(),
       m_connection(std::move(connection)),
       m_event_loop(nullptr),
@@ -53,33 +55,36 @@ auto QueryPool::Produce(
     {
         m_lock.unlock();
         return Query(
-            new QueryHandle(
-                m_event_loop,
-                *this,
-                m_connection,
-                on_complete,
-                timeout,
-                std::move(query)
+            // Calling new instead of std::make_unique since the ctor is private
+            std::unique_ptr<QueryHandle>(
+                new QueryHandle(
+                    m_event_loop,
+                    *this,
+                    m_connection,
+                    on_complete,
+                    timeout,
+                    std::move(query)
+                )
             )
         );
     }
     else
     {
-        auto* request_handle = m_queries.back();
+        auto request_handle_ptr = std::move(m_queries.back());
         m_queries.pop_back();
         m_lock.unlock();
 
-        request_handle->SetOnCompleteHandler(on_complete);
-        request_handle->SetTimeout(timeout);
-        request_handle->SetQuery(std::move(query));
-        request_handle->SetUserData(nullptr); // reset user data too
+        request_handle_ptr->SetOnCompleteHandler(on_complete);
+        request_handle_ptr->SetTimeout(timeout);
+        request_handle_ptr->SetQuery(std::move(query));
+        request_handle_ptr->SetUserData(nullptr); // reset user data too
 
-        return Query(request_handle);
+        return Query(std::move(request_handle_ptr));
     }
 }
 
 auto QueryPool::returnQuery(
-    QueryHandle* query_handle
+    std::unique_ptr<QueryHandle> query_handle
 ) -> void
 {
     // If the handle has had any kind of error while processing
@@ -88,23 +93,18 @@ auto QueryPool::returnQuery(
     // and then delete the request handle.
     if(query_handle->HasError())
     {
-        query_handle->close();
         return;
     }
 
     {
         std::lock_guard<std::mutex> guard(m_lock);
-        m_queries.emplace_back(query_handle);
+        m_queries.emplace_back(std::move(query_handle));
     }
 }
 
 auto QueryPool::close() -> void
 {
     std::lock_guard<std::mutex> guard(m_lock);
-    for(auto* request_handle : m_queries)
-    {
-        request_handle->close();
-    }
     m_queries.clear();
 }
 

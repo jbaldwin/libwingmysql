@@ -9,12 +9,6 @@
 namespace wing
 {
 
-extern auto on_uv_timeout_callback(uv_timer_t* handle) -> void;
-
-auto on_uv_close_query_handle_callback(
-    uv_handle_t* handle
-) -> void;
-
 QueryHandle::QueryHandle(
     EventLoop* event_loop,
     QueryPool& query_pool,
@@ -27,10 +21,6 @@ QueryHandle::QueryHandle(
       m_query_pool(query_pool),
       m_connection(connection),
       m_on_complete(on_complete),
-      m_poll(),
-      m_poll_uv_close_called(false),
-      m_timeout_timer(),
-      m_timeout_timer_uv_close_called(false),
       m_timeout(timeout),
       m_mysql(),
       m_result(nullptr),
@@ -46,20 +36,18 @@ QueryHandle::QueryHandle(
       m_query_parts(),
       m_bind_param_count(0),
       m_bind_params(),
-      m_poll_closed(false),
-      m_timeout_timer_closed(false),
-      m_close_called(false),
       m_converter(),
       m_user_data(nullptr)
 {
     mysql_init(&m_mysql);
-    // set the mysql timeout in the for synchronous queries...
-    // otherwise timeouts are handled through libuv.
-    auto timeout_seconds = std::chrono::duration_cast<std::chrono::seconds>(m_timeout);
-    unsigned int read_timeout = static_cast<unsigned int>(timeout_seconds.count());
-    mysql_options(&m_mysql, MYSQL_OPT_READ_TIMEOUT, &read_timeout);
+
+    SetTimeout(timeout);
+
     unsigned int connect_timeout = 1;
     mysql_options(&m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
+
+    uint64_t auto_reconnect = 1;
+    mysql_options(&m_mysql, MYSQL_OPT_RECONNECT, &auto_reconnect);
 
     SetQuery(std::move(query));
 }
@@ -83,8 +71,14 @@ auto QueryHandle::GetQueryStatus() const -> QueryStatus
     return m_query_status;
 }
 
-auto QueryHandle::SetTimeout(std::chrono::milliseconds timeout) -> void
+auto QueryHandle::SetTimeout(
+    std::chrono::milliseconds timeout
+) -> void
 {
+    auto timeout_seconds = std::chrono::duration_cast<std::chrono::seconds>(m_timeout);
+    unsigned int read_timeout = static_cast<unsigned int>(timeout_seconds.count());
+    mysql_options(&m_mysql, MYSQL_OPT_READ_TIMEOUT, &read_timeout);
+
     m_timeout = timeout;
 }
 
@@ -160,7 +154,9 @@ auto QueryHandle::Execute() -> QueryStatus
     {
         if(!connect())
         {
-           return QueryStatus::CONNECT_FAILURE;
+            m_query_status = QueryStatus::CONNECT_FAILURE;
+            m_had_error = true;
+            return QueryStatus::CONNECT_FAILURE;
         }
     }
 
@@ -180,12 +176,15 @@ auto QueryHandle::Execute() -> QueryStatus
         }
         else
         {
-            m_query_status = QueryStatus::READ_FAILURE;
+            m_query_status = QueryStatus::STORE_FAILURE;
+            m_had_error = true;
         }
     }
     else
     {
         m_query_status = QueryStatus::TIMEOUT;
+        m_had_error = true;
+
     }
     return m_query_status;
 }
@@ -245,35 +244,10 @@ auto QueryHandle::connect() -> bool
             return false;
         }
 
-        // If this request is connected to an
-        // event loop, initialize poll/timers.
-        if(m_event_loop != nullptr)
-        {
-            uv_poll_init_socket(m_event_loop->m_query_loop, &m_poll, m_mysql.net.fd);
-            m_poll.data = this;
-
-            uv_timer_init(m_event_loop->m_query_loop, &m_timeout_timer);
-            m_timeout_timer.data = this;
-        }
-
         m_is_connected = true;
     }
 
     return true;
-}
-
-auto QueryHandle::startAsync() -> void
-{
-    m_query_status = QueryStatus::EXECUTING;
-    freeResult();
-    bindParameters();
-
-    uv_timer_start(
-        &m_timeout_timer,
-        on_uv_timeout_callback,
-        static_cast<uint64_t>(m_timeout.count()),
-        0
-    );
 }
 
 auto QueryHandle::bindParameters() -> void
@@ -299,67 +273,6 @@ auto QueryHandle::bindParameters() -> void
     }
 }
 
-auto QueryHandle::failedAsync(
-    QueryStatus status
-) -> void
-{
-    m_query_status = status;
-    m_had_error = true;
-    if(m_event_loop != nullptr && m_is_connected)
-    {
-        uv_timer_stop(&m_timeout_timer);
-    }
-}
-
-auto QueryHandle::onRead() -> bool
-{
-    uv_timer_stop(&m_timeout_timer);
-
-    auto success = (0 == mysql_read_query_result(&m_mysql));
-    if(!success)
-    {
-        failedAsync(QueryStatus::READ_FAILURE);
-        return false;
-    }
-
-    m_result = mysql_store_result(&m_mysql);
-    if(m_result == nullptr)
-    {
-        failedAsync(QueryStatus::STORE_FAILURE);
-        return false;
-    }
-
-    m_query_status = QueryStatus::SUCCESS;
-    m_field_count  = mysql_num_fields(m_result);
-    m_row_count    = mysql_num_rows(m_result);
-    parseRows();
-    return true;
-}
-
-auto QueryHandle::onWrite() -> bool
-{
-    // If there were no bind params, use the raw query provided.
-    const std::string& query = (m_bind_param_count == 0) ? m_original_query : m_query_buffer;
-
-    auto success = (0 == mysql_send_query(&m_mysql, query.c_str(), query.length()));
-    if(!success)
-    {
-        failedAsync(QueryStatus::WRITE_FAILURE);
-    }
-    return success;
-}
-
-auto QueryHandle::onTimeout() -> void
-{
-    failedAsync(QueryStatus::TIMEOUT);
-}
-
-auto QueryHandle::onDisconnect() -> void
-{
-    failedAsync(QueryStatus::DISCONNECT);
-}
-
-
 auto QueryHandle::parseRows() -> void
 {
     if(!m_parsed_result && GetRowCount() > 0) {
@@ -384,65 +297,6 @@ auto QueryHandle::freeResult() -> void
         m_row_count = 0;
         m_rows.clear();
         m_result = nullptr;
-    }
-}
-
-auto QueryHandle::close() -> void
-{
-    if(!m_close_called)
-    {
-        m_close_called = true;
-        if(m_event_loop != nullptr)
-        {
-            if(!m_is_connected)
-            {
-                // this request never even connected and thus its libuv data structures are uninitialized
-                delete this;
-                return;
-            }
-
-            if(!m_poll_uv_close_called)
-            {
-                uv_close(reinterpret_cast<uv_handle_t*>(&m_poll), on_uv_close_query_handle_callback);
-                m_poll_uv_close_called = true;
-            }
-            if(!m_timeout_timer_uv_close_called)
-            {
-                uv_close(reinterpret_cast<uv_handle_t*>(&m_timeout_timer), on_uv_close_query_handle_callback);
-                m_timeout_timer_uv_close_called = true;
-            }
-        }
-        else
-        {
-            // This is a synchronous request query handle and has no libuv data structures.
-            delete this;
-        }
-    }
-}
-
-auto on_uv_close_query_handle_callback(
-    uv_handle_t* handle
-) -> void
-{
-    auto* query_handle = static_cast<QueryHandle*>(handle->data);
-
-    if(handle == reinterpret_cast<uv_handle_t*>(&query_handle->m_poll))
-    {
-        query_handle->m_poll_closed = true;
-    }
-    else if(handle == reinterpret_cast<uv_handle_t*>(&query_handle->m_timeout_timer))
-    {
-        query_handle->m_timeout_timer_closed = true;
-    }
-
-    /**
-     * When all uv handles are closed then it is safe to delete the request handle.
-     */
-    if(   query_handle->m_poll_closed
-       && query_handle->m_timeout_timer_closed
-    )
-    {
-        delete query_handle;
     }
 }
 

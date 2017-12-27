@@ -5,8 +5,10 @@
 namespace wing
 {
 
-Query::Query(QueryHandle* query_handle)
-    : m_query_handle(query_handle)
+Query::Query(
+    std::unique_ptr<QueryHandle> query_handle
+)
+    : m_query_handle(std::move(query_handle))
 {
 
 }
@@ -16,21 +18,19 @@ Query::~Query()
     if(m_query_handle)
     {
         QueryPool& query_pool = m_query_handle->m_query_pool;
-        query_pool.returnQuery(m_query_handle);
-        m_query_handle = nullptr;
+        query_pool.returnQuery(std::move(m_query_handle));
     }
 }
 
 Query::Query(Query&& from)
-    : m_query_handle(from.m_query_handle)
+    : m_query_handle(std::move(from.m_query_handle))
 {
-    from.m_query_handle = nullptr;
+
 }
 
 auto Query::operator = (Query&& from) -> Query&
 {
-    m_query_handle = from.m_query_handle;
-    from.m_query_handle = nullptr;
+    m_query_handle = std::move(from.m_query_handle);
     return *this;
 }
 
@@ -46,12 +46,12 @@ auto Query::operator *() const -> const QueryHandle&
 
 auto Query::operator -> () -> QueryHandle*
 {
-    return m_query_handle;
+    return m_query_handle.get();
 }
 
 auto Query::operator ->() const -> const QueryHandle*
 {
-    return m_query_handle;
+    return m_query_handle.get();
 }
 
 } // wing

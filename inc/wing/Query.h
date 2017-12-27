@@ -35,10 +35,10 @@ public:
     /** @} */
 private:
     explicit Query(
-        QueryHandle* query_handle
+        std::unique_ptr<QueryHandle> query_handle
     );
 
-    QueryHandle* m_query_handle;
+    std::unique_ptr<QueryHandle> m_query_handle;
 };
 
 } // wing

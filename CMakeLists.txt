@@ -3,8 +3,17 @@ project(wingmysql CXX)
 
 message(${CMAKE_CXX_COMPILER_ID})
 
-set(MYSQL_CLIENT "/usr/lib64/mysql/libmysqlclient_r.a" CACHE STRING "User specified mysql-client location.")
-message("MYSQL_CLIENT = ${MYSQL_CLIENT}")
+set(MYSQL_CLIENT_LIB "/usr/lib64/mysql/libmysqlclient_r.a" CACHE STRING "User specified mysql-client location.")
+message("MYSQL_CLIENT = ${MYSQL_CLIENT_LIB}")
+
+set(SSL_INCLUDE "" CACHE STRING "User specified ssl include location.")
+message("SSL_INCLUDE = ${SSL_INCLUDE}")
+
+set(SSL_LIB "ssl" CACHE STRING "User specified libssl location.")
+message("SSL_LIB = ${SSL_LIB}")
+
+set(CRYPTO_LIB "crypto" CACHE STRING "User specified libcrypto location.")
+message("CRYPTO_LIB = ${CRYPTO_LIB}")
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
@@ -35,19 +44,18 @@ set(LIB_WING_MYSQL_SOURCE_FILES
 
 add_library(${PROJECT_NAME} STATIC ${LIB_WING_MYSQL_SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE /usr/include/mysql)
-#target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SSL_INCLUDE})
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE /usr/include/mysql ${SSL_INCLUDE})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     uv
-    ${MYSQL_CLIENT}
+    ${MYSQL_CLIENT_LIB}
     pthread
     m
     rt
     dl
     z
-    ssl
-    crypto
+    ${SSL_LIB}
+    ${CRYPTO_LIB}
 )
 
 include(examples/CMakeLists.txt)

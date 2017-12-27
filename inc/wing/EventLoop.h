@@ -20,20 +20,6 @@ class EventLoop
 public:
     /**
      * Creates an event loop to execute asynchronous MySQL queries.
-     *
-     * Event loops will spin up 2 worker threads:
-     *      1) Query thread - drives the asynchronous queries.
-     *         This threads sole purpose is to handle multiple
-     *         sql queries at the same time and notify the user via
-     *         the IQueryCallback when one of them finishes.
-     *
-     *      2) Connect thread -- The standard MySQL client library
-     *         has no way to connect asynchronously and thus as
-     *         new handles are spun-up into the QueryPool connecting
-     *         becomes less frequent.  That means initialize if there
-     *         are a lot of queries they will start out bottle necked
-     *         on the connect thread.
-     *
      * @param connection The connection information for the MySQL Server.
      */
     explicit EventLoop(
@@ -88,7 +74,6 @@ private:
     QueryPool m_query_pool;
 
     std::atomic<bool> m_is_query_running;
-    std::atomic<bool> m_is_connect_running;
     std::atomic<bool> m_is_stopping;
     std::atomic<uint64_t> m_active_query_count;
 
@@ -100,71 +85,35 @@ private:
     std::vector<Query> m_pending_queries;
     std::vector<Query> m_grabbed_queries;
 
-    std::thread m_background_connect_thread;
-    uv_loop_t* m_connect_loop;
-    uv_async_t m_connect_async;
-    std::atomic<bool> m_connect_async_closed;
-    std::mutex m_pending_connects_lock;
-    std::vector<Query> m_pending_connects;
-    std::vector<Query> m_grabbed_connects;
-
     auto run_queries() -> void;
-    auto run_connect() -> void;
 
-    auto callOnComplete(Query query) -> void;
-    auto callOnComplete(QueryHandle* query_handle) -> void;
+    auto callOnComplete(
+        Query query
+    ) -> void;
+    auto callOnComplete(
+        std::unique_ptr<QueryHandle> query_handle
+    ) -> void;
 
     auto onClose(
         uv_handle_t* handle
-    ) -> void;
-
-    auto onPoll(
-        uv_poll_t* handle,
-        int status,
-        int events
-    ) -> void;
-
-    auto onTimeout(
-        uv_timer_t* handle
     ) -> void;
 
     auto requestsAcceptForQueryAsync(
         uv_async_t* async
     ) -> void;
 
-    auto requestsAcceptForConnectAsync(
-        uv_async_t* async
-    ) -> void;
-
-    enum class UVPollEvent {
-        READABLE    = 1,
-        WRITEABLE   = 2,
-        DISCONNECT  = 4,
-        PRIORITIZED = 8
-    };
-
     friend auto uv_close_event_loop_callback(
         uv_handle_t* handle
     ) -> void;
 
-    friend auto on_uv_poll_callback(
-        uv_poll_t* handle,
-        int status,
-        int events
-    ) -> void;
-
-    friend auto on_uv_timeout_callback(
-        uv_timer_t* handle
+    friend auto on_complete_uv_query_execute_callback(
+        uv_work_t* req,
+        int status
     ) -> void;
 
     friend auto requests_accept_for_query_async(
         uv_async_t* async
     ) -> void;
-
-    friend auto requests_accept_for_connect_async(
-        uv_async_t* async
-    ) -> void;
-
 };
 
 } // wing
