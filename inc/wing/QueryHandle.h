@@ -35,6 +35,11 @@ public:
     auto operator = (QueryHandle&&) -> QueryHandle& = default;  ///< Can move assign
 
     /**
+     * Resets QueryHandle, freeing results and clearing m_query_parts and m_bind_params
+     */
+    auto Reset() -> void;
+
+    /**
      * @param on_complete The on complete function handle for this query.
      */
     auto SetOnCompleteHandler(
