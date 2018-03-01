@@ -59,8 +59,12 @@ QueryHandle::QueryHandle(
 
 QueryHandle::~QueryHandle()
 {
-    freeResult();
+    Reset();
     mysql_close(&m_mysql);
+}
+
+auto QueryHandle::Reset() -> void {
+    freeResult();
     m_query_parts.clear();
     m_bind_params.clear();
 }

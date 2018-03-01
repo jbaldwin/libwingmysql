@@ -17,6 +17,7 @@ Query::~Query()
 {
     if(m_query_handle)
     {
+        m_query_handle->Reset();
         QueryPool& query_pool = m_query_handle->m_query_pool;
         query_pool.returnQuery(std::move(m_query_handle));
     }
