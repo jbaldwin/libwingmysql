@@ -4,7 +4,7 @@
 
 static auto on_complete(wing::Query request) -> void
 {
-    std::cout << "Finished query: " << request->GetQueryWithBindParams() << std::endl;
+    std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
     std::cout << wing::to_string(request->GetQueryStatus()) << "\n";
     if(request->HasError())
     {
@@ -36,9 +36,9 @@ static auto on_complete(wing::Query request) -> void
 
 int main(int argc, char* argv[])
 {
-    if(argc < 8)
+    if(argc < 7)
     {
-        std::cout << argv[0] << " <hostname> <port> <user> <password> <db> <query> <...params>\n";
+        std::cout << argv[0] << " <hostname> <port> <user> <password> <db> <... query part | -e escape_parameter>\n";
         return 1;
     }
 
@@ -47,7 +47,31 @@ int main(int argc, char* argv[])
     std::string user(argv[3]);
     std::string password(argv[4]);
     std::string db(argv[5]);
-    std::string mysql_query_string(argv[6]);
+
+    // everything after 5 should either be a raw string, or a -e followed by a string to escape
+    wing::Statement mysql_statement;
+    for (int i = 6; i < argc; ++i) {
+        std::string_view value{argv[i]};
+        bool as_arg = false;
+
+        if (value == "-e") {
+            ++i;
+
+            if (i < argc) {
+                as_arg = true;
+                value = argv[i];
+            } else {
+                std::cout << "invalid -e argument not followed by parameter" << std::endl;
+                return 2;
+            }
+        }
+
+        if (as_arg) {
+            mysql_statement << wing::Statement::Arg(value);
+        } else {
+            mysql_statement << value;
+        }
+    }
 
     wing::startup();
 
@@ -56,13 +80,7 @@ int main(int argc, char* argv[])
 
     using namespace std::chrono_literals;
     auto& query_pool = event_loop.GetQueryPool();
-    auto query = query_pool.Produce(mysql_query_string, 1000ms, on_complete);
-
-    for(size_t i = 7; i < static_cast<size_t>(argc); ++i)
-    {
-        // we'll only support strings for the example
-        query->BindString(argv[i]);
-    }
+    auto query = query_pool.Produce(mysql_statement, 1000ms, on_complete);
 
     event_loop.StartQuery(std::move(query));
 

@@ -3,6 +3,7 @@
 #include "wing/QueryStatus.h"
 #include "wing/Row.h"
 #include "wing/ConnectionInfo.h"
+#include "wing/Statement.h"
 
 #include <string>
 #include <memory>
@@ -59,62 +60,17 @@ public:
     auto GetTimeout() const -> std::chrono::milliseconds;
 
     /**
-     * Sets the query string.  To use bind parameters set question marks '?'
-     * in the places where you want to bind values to.
-     *
-     * Note that strings do not automatically include quotes when binding, you must
-     * include them in the template query.
-     *
-     * Parameters are not bound by an index, they are bound in sequence, 0, 1, 2, etc.
-     *
-     * @param query SQL query to execute.  Can contain parameters to bind.
+     * Sets the query statement for this query, the statement object
+     * provides utilities for creating prepared statements and binding
+     * the parameters
+     * @param statement the statement set for this query
      */
-    auto SetQuery(
-        std::string query
-    ) -> void;
+    auto SetStatement(Statement statement) -> void;
 
     /**
-     * @return Gets the original un-bind'ed SQL query.
+     * @return the original query that was executed
      */
     auto GetQueryOriginal() const -> const std::string&;
-
-    /**
-     * Note that this is lazily evaluated and will not be valid
-     * until after the query is completed.
-     * @return Gets the bind'ed SQL query.
-     */
-    auto GetQueryWithBindParams() const -> const std::string&;
-
-    /**
-     * Escapes and binds a string parameter to the query in the next parameter slot.
-     *
-     * Note that this function does not include quotes around the string parameter,
-     * you must include them in the template query when using SetQuery().
-     *
-     * example: SELECT * FROM FOO WHERE key_id = '?';
-     *                                           ^-^-----
-     *
-     * @param param The string parameter to escape and bind.
-     */
-    auto BindString(
-        const std::string& param
-    ) -> void;
-
-    /**
-     * Binds an unsigned 64 bit integer parameter to the query in the next parameter slot.
-     * @param param The unsigned 64 bit integer parameter to bind.
-     */
-    auto BindUInt64(
-        uint64_t param
-    ) -> void;
-
-    /**
-     * Binds a signed 64 bit integer parameter to the query in the next parameter slot.
-     * @param param The signed 64 bit integer parameter to bind.
-     */
-    auto BindInt64(
-        int64_t param
-    ) -> void;
 
     /**
      * Executes the query synchronously.
@@ -173,7 +129,7 @@ private:
         const ConnectionInfo& connection,
         OnCompleteHandler on_complete,
         std::chrono::milliseconds timeout,
-        std::string query
+        Statement statement
     );
 
     /**
@@ -185,11 +141,6 @@ private:
      * @return True on connected, false on failure.
      */
     auto connect() -> bool;
-
-    /**
-     * Escapes (strings) and binds parameters to the template query.
-     */
-    auto bindParameters() -> void;
 
     /**
      * Parses the rows from the result.
@@ -216,16 +167,11 @@ private:
     bool m_is_connected;                ///< Has this MySQL client connected to the server yet?
     bool m_had_error;                   ///< Has this MySQL client had an error?
 
-    QueryStatus m_query_status;             ///< The status of the last query.
-    std::string m_original_query;           ///< The originally provided SQL query string - no bound parameters.
-    std::string m_query_buffer;             ///< Buffer for binding parameters.
-    std::vector<std::string_view> m_query_parts;  ///< The query parts before/after a parameter '?'.
-    size_t m_bind_param_count;              ///< The number of parameters to bind to this query.
-    std::vector<std::string> m_bind_params; ///< The escaped and stringified bind parameters.
+    QueryStatus m_query_status;         ///< The status of the last query.
+    Statement m_statement;              ///< The SQL statement for this query
+    std::string m_final_statement;      ///< The SQL statement that was last executed
 
-    std::stringstream m_converter;  ///< Convert non-string bind parameters into strings.
-
-    void* m_user_data;              ///< User provided data.
+    void* m_user_data;                  ///< User provided data.
 
     friend auto on_uv_query_execute_callback(
         uv_work_t* req

@@ -15,7 +15,7 @@ QueryHandle::QueryHandle(
     const ConnectionInfo& connection,
     OnCompleteHandler on_complete,
     std::chrono::milliseconds timeout,
-    std::string query
+    Statement statement
 )
     : m_event_loop(event_loop),
       m_query_pool(query_pool),
@@ -31,12 +31,7 @@ QueryHandle::QueryHandle(
       m_is_connected(false),
       m_had_error(false),
       m_query_status(QueryStatus::BUILDING),
-      m_original_query(),
-      m_query_buffer(),
-      m_query_parts(),
-      m_bind_param_count(0),
-      m_bind_params(),
-      m_converter(),
+      m_statement(std::move(statement)),
       m_user_data(nullptr)
 {
     mysql_init(&m_mysql);
@@ -53,21 +48,18 @@ QueryHandle::QueryHandle(
     mysql_options(&m_mysql, MYSQL_OPT_SSL_ENFORCE, &ssl);
     uint32_t ssl_mode = SSL_MODE_DISABLED;
     mysql_options(&m_mysql, MYSQL_OPT_SSL_MODE, &ssl_mode);
-
-    SetQuery(std::move(query));
 }
 
 QueryHandle::~QueryHandle()
 {
     freeResult();
     mysql_close(&m_mysql);
-    m_query_parts.clear();
-    m_bind_params.clear();
 }
 
 auto QueryHandle::SetOnCompleteHandler(
     OnCompleteHandler on_complete
-) -> void {
+) -> void
+{
     m_on_complete = on_complete;
 }
 
@@ -92,65 +84,13 @@ auto QueryHandle::GetTimeout() const -> std::chrono::milliseconds
     return m_timeout;
 }
 
-auto QueryHandle::SetQuery(
-    std::string query
-) -> void
+auto QueryHandle::SetStatement(Statement statement) -> void
 {
-    m_original_query = std::move(query);
-    // Find all of the bind params.
-    m_query_parts = split_view(m_original_query, '?');
-    if(m_query_parts.size() > 1)
-    {
-        m_query_buffer.reserve(m_original_query.size() * 2 + 1);
-        m_bind_param_count = m_query_parts.size() - 1;
-        m_bind_params.reserve(m_field_count);
-    }
-    else
-    {
-        m_field_count = 0;
-    }
+    m_statement = std::move(statement);
 }
 
-auto QueryHandle::GetQueryOriginal() const -> const std::string&
-{
-    return m_original_query;
-}
-
-auto QueryHandle::GetQueryWithBindParams() const -> const std::string&
-{
-    return m_query_buffer;
-}
-
-auto QueryHandle::BindString(const std::string& param) -> void
-{
-    // https://dev.mysql.com/doc/refman/5.7/en/mysql-real-escape-string.html
-    std::string buffer;
-    buffer.resize(param.length() * 2 + 1);
-
-    size_t length = mysql_real_escape_string(&m_mysql, &buffer.front(), &param.front(), param.length());
-    buffer.resize(length);
-
-    m_bind_params.emplace_back(std::move(buffer));
-}
-
-auto QueryHandle::BindUInt64(
-    uint64_t param
-) -> void
-{
-    m_converter.clear();
-    m_converter.str("");
-    m_converter << param;
-    m_bind_params.emplace_back(m_converter.str());
-}
-
-auto QueryHandle::BindInt64(
-    int64_t param
-) -> void
-{
-    m_converter.clear();
-    m_converter.str("");
-    m_converter << param;
-    m_bind_params.emplace_back(m_converter.str());
+auto QueryHandle::GetQueryOriginal() const -> const std::string& {
+    return m_final_statement;
 }
 
 auto QueryHandle::Execute() -> QueryStatus
@@ -166,10 +106,22 @@ auto QueryHandle::Execute() -> QueryStatus
     }
 
     freeResult();
-    bindParameters();
 
-    const std::string& query = (m_bind_param_count == 0) ? m_original_query : m_query_buffer;
-    if(0 == mysql_real_query(&m_mysql, query.c_str(), query.length()))
+    // ask our statement to prepare the final query string
+    m_final_statement = m_statement.prepareStatement(
+        [this](const auto& str_value) {
+            // https://dev.mysql.com/doc/refman/5.7/en/mysql-real-escape-string.html
+            std::string buffer;
+            buffer.resize(str_value.length() * 2 + 1);
+
+            size_t length = mysql_real_escape_string(&m_mysql, buffer.data(), &str_value.front(), str_value.length());
+            buffer.resize(length);
+
+            return buffer;
+        }
+    );
+
+    if(0 == mysql_real_query(&m_mysql, m_final_statement.c_str(), m_final_statement.length()))
     {
         m_result = mysql_store_result(&m_mysql);
         if(m_result != nullptr)
@@ -253,29 +205,6 @@ auto QueryHandle::connect() -> bool
     }
 
     return true;
-}
-
-auto QueryHandle::bindParameters() -> void
-{
-    // If there are params to bind, create the true query now.
-    if(m_bind_param_count > 0)
-    {
-        m_query_buffer.clear();
-        if(m_bind_param_count != m_bind_params.size())
-        {
-            throw std::runtime_error("not enough bind params");
-        }
-
-        for(size_t i = 0; i < m_query_parts.size(); ++i)
-        {
-            m_query_buffer.append(std::string(m_query_parts[i]));
-            // the last query part might be trailing text
-            if(i < m_bind_params.size())
-            {
-                m_query_buffer.append(m_bind_params[i]);
-            }
-        }
-    }
 }
 
 auto QueryHandle::parseRows() -> void

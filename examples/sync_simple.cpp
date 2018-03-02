@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
     std::string user(argv[3]);
     std::string password(argv[4]);
     std::string db(argv[5]);
-    std::string mysql_query_string(argv[6]);
+    wing::Statement mysql_statement;
+    mysql_statement << argv[6];
 
     wing::startup();
 
@@ -56,12 +57,12 @@ int main(int argc, char* argv[])
 
     wing::QueryPool query_pool(connection);
     {
-        auto query = query_pool.Produce(mysql_query_string, 1000ms);
+        auto query = query_pool.Produce(mysql_statement, 1000ms);
         run_query(query);
         run_query(query);
     }
     {
-        auto query = query_pool.Produce(mysql_query_string, 1000ms);
+        auto query = query_pool.Produce(mysql_statement, 1000ms);
         run_query(query);
     }
 

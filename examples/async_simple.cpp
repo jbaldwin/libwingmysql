@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
     std::string user(argv[3]);
     std::string password(argv[4]);
     std::string db(argv[5]);
-    std::string mysql_query_string(argv[6]);
+    wing::Statement mysql_statement;
+    mysql_statement << argv[6];
 
     wing::startup();
 
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
 
     using namespace std::chrono_literals;
     auto& request_pool = event_loop.GetQueryPool();
-    auto request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+    auto request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
     event_loop.StartQuery(std::move(request));
 
     std::this_thread::sleep_for(250ms);
@@ -65,7 +66,7 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(100ms);
     }
 
-    request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+    request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
     event_loop.StartQuery(std::move(request));
     std::this_thread::sleep_for(250ms);
     while(event_loop.GetActiveQueryCount() > 0)
