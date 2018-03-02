@@ -3,6 +3,15 @@
 namespace wing
 {
 
+auto get_thread_local_stream() -> std::stringstream& {
+    thread_local std::stringstream t_stream;
+
+    t_stream.clear();
+    t_stream.str("");
+
+    return t_stream;
+}
+
 auto split_view(
     const std::string_view s,
     char delim

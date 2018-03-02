@@ -41,17 +41,17 @@ public:
 
     /**
      * Produces a Query from the pool with the provided query and timeout.
-     * @param query The SQL query, can contain bind parameters.
+     * @param statement The SQL statement, can contain bind parameters.
      * @param timeout The timeout for this query in milliseconds.
      * @return A Query handle.
      */
     auto Produce(
-        std::string query,
+        Statement statement,
         std::chrono::milliseconds timeout
     ) -> Query;
 
     auto Produce(
-        std::string query,
+        Statement statement,
         std::chrono::milliseconds timeout,
         OnCompleteHandler on_complete
     ) -> Query;
