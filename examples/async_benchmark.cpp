@@ -13,7 +13,7 @@ static uint16_t port;
 static std::string user;
 static std::string password;
 static std::string db;
-static std::string mysql_query_string;
+static wing::Statement mysql_statement;
 
 using namespace std::chrono_literals;
 
@@ -53,7 +53,7 @@ static auto on_complete(wing::Query request) -> void
     else
     {
         auto& request_pool = event_loop->GetQueryPool();
-        request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+        request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
         request->SetUserData(event_loop);
         event_loop->StartQuery(std::move(request));
 
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     user = (argv[5]);
     password = (argv[6]);
     db = (argv[7]);
-    mysql_query_string = (argv[8]);
+    mysql_statement << argv[8];
 
     wing::startup();
 
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     auto& request_pool = event_loop.GetQueryPool();
 
     for(size_t i = 0; i < connections; ++i) {
-        auto request = request_pool.Produce(mysql_query_string, 1000ms, on_complete);
+        auto request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
         request->SetUserData(&event_loop);
         event_loop.StartQuery(std::move(request));
     }
