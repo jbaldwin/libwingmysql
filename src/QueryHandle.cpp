@@ -52,8 +52,16 @@ QueryHandle::QueryHandle(
 
 QueryHandle::~QueryHandle()
 {
-    freeResult();
+    Reset();
     mysql_close(&m_mysql);
+}
+
+auto QueryHandle::Reset() -> void {
+    freeResult();
+    m_statement = Statement();
+    m_query_status = QueryStatus::BUILDING;
+    m_user_data = nullptr;
+    m_had_error = false;
 }
 
 auto QueryHandle::SetOnCompleteHandler(

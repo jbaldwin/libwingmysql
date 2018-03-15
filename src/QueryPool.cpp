@@ -97,6 +97,7 @@ auto QueryPool::returnQuery(
     }
 
     {
+        query_handle->Reset();
         std::lock_guard<std::mutex> guard(m_lock);
         m_queries.emplace_back(std::move(query_handle));
     }
