@@ -118,6 +118,9 @@ auto QueryHandle::Execute() -> QueryStatus
     // ask our statement to prepare the final query string
     m_final_statement = m_statement.prepareStatement(
         [this](const std::string& str_value) {
+            if(str_value.empty()) {
+                throw std::invalid_argument("Empty statement part passed in to prepareStatement");
+            }
             // https://dev.mysql.com/doc/refman/5.7/en/mysql-real-escape-string.html
             std::string buffer;
             buffer.resize(str_value.length() * 2 + 1);

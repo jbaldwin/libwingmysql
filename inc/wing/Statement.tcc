@@ -28,6 +28,10 @@ Statement::Arg::Arg(const T& parameter_value)
         stream << parameter_value; // error on this line means you're trying to bind using a non-streamable type
         m_string_value = stream.str();
     }
+    if(m_string_value.empty())
+    {
+        throw std::invalid_argument("Argument evaulates to empty string");
+    }
 }
 
 template <typename T>
