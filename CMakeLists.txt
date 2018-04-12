@@ -18,7 +18,7 @@ message("SSL_LIB = ${SSL_LIB}")
 set(CRYPTO_LIB "crypto" CACHE STRING "User specified libcrypto location.")
 message("CRYPTO_LIB = ${CRYPTO_LIB}")
 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/lib)
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
