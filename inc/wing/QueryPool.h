@@ -8,6 +8,7 @@
 #include <mutex>
 #include <memory>
 #include <chrono>
+#include <functional>
 
 namespace wing
 {
@@ -53,7 +54,7 @@ public:
     auto Produce(
         Statement statement,
         std::chrono::milliseconds timeout,
-        OnCompleteHandler on_complete
+        std::function<void(Query)> on_complete
     ) -> Query;
 private:
     std::mutex m_lock;

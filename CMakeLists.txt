@@ -3,7 +3,7 @@ project(wingmysql CXX)
 
 message(${CMAKE_CXX_COMPILER_ID})
 
-set(MYSQL_CLIENT_LIB "/usr/lib64/mysql/libmysqlclient_r.a" CACHE STRING "User specified mysql-client location.")
+set(MYSQL_CLIENT_LIB "libmysqlclient_r.so" CACHE STRING "User specified mysql-client location.")
 message("MYSQL_CLIENT_LIB = ${MYSQL_CLIENT_LIB}")
 
 set(MYSQL_CLIENT_INCLUDE "/usr/include/mysql" CACHE STRING "User specified mysql-client include location.")

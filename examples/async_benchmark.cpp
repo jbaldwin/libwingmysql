@@ -16,6 +16,7 @@ static std::string db;
 static wing::Statement mysql_statement;
 
 using namespace std::chrono_literals;
+using namespace std::placeholders;
 
 static auto print_stats(
     uint64_t duration_s,
@@ -36,7 +37,7 @@ static auto print_stats(
     std::cout << "Requests/sec: " << (total / static_cast<double>(duration_s)) << "\n";
 }
 
-static auto on_complete(wing::Query request) -> void
+static auto on_complete(wing::Query request, wing::EventLoop& event_loop) -> void
 {
     ++count;
     if(request->HasError())
@@ -45,18 +46,16 @@ static auto on_complete(wing::Query request) -> void
         std::cout << "ERROR: " << wing::to_string(request->GetQueryStatus()) << " " << request->GetError() << "\n";
     }
 
-    auto* event_loop = static_cast<wing::EventLoop*>(request->GetUserData());
     if(request->GetQueryStatus() == wing::QueryStatus::SUCCESS)
     {
-        event_loop->StartQuery(std::move(request));
+        event_loop.StartQuery(std::move(request));
     }
     else
     {
-        auto& request_pool = event_loop->GetQueryPool();
-        request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
-        request->SetUserData(event_loop);
-        event_loop->StartQuery(std::move(request));
-
+        auto& request_pool = event_loop.GetQueryPool();
+        auto callback = std::bind(on_complete, _1, std::ref(event_loop));
+        request = request_pool.Produce(mysql_statement, 1000ms, callback);
+        event_loop.StartQuery(std::move(request));
     }
 }
 
@@ -84,8 +83,8 @@ int main(int argc, char* argv[])
     auto& request_pool = event_loop.GetQueryPool();
 
     for(size_t i = 0; i < connections; ++i) {
-        auto request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
-        request->SetUserData(&event_loop);
+        auto callback = std::bind(on_complete, _1, std::ref(event_loop));
+        auto request = request_pool.Produce(mysql_statement, 1000ms, std::move(callback));
         event_loop.StartQuery(std::move(request));
     }
 

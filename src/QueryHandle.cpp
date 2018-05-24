@@ -3,6 +3,8 @@
 #include "wing/QueryPool.h"
 #include "wing/Util.h"
 
+#include <mysql/mysql.h>
+
 #include <stdexcept>
 #include <sstream>
 
@@ -13,14 +15,14 @@ QueryHandle::QueryHandle(
     EventLoop* event_loop,
     QueryPool& query_pool,
     const ConnectionInfo& connection,
-    OnCompleteHandler on_complete,
+    std::function<void(Query)> on_complete,
     std::chrono::milliseconds timeout,
     Statement statement
 )
     : m_event_loop(event_loop),
       m_query_pool(query_pool),
       m_connection(connection),
-      m_on_complete(on_complete),
+      m_on_complete(std::move(on_complete)),
       m_timeout(timeout),
       m_mysql(),
       m_result(nullptr),
@@ -46,8 +48,12 @@ QueryHandle::QueryHandle(
 
     bool ssl = false;
     mysql_options(&m_mysql, MYSQL_OPT_SSL_ENFORCE, &ssl);
+
+    //  Some mysql libraries do not support SSL_MODE_DISABLED
+#ifdef SSL_MODE_DISABLED
     uint32_t ssl_mode = SSL_MODE_DISABLED;
     mysql_options(&m_mysql, MYSQL_OPT_SSL_MODE, &ssl_mode);
+#endif
 }
 
 QueryHandle::~QueryHandle()
@@ -65,10 +71,10 @@ auto QueryHandle::Reset() -> void {
 }
 
 auto QueryHandle::SetOnCompleteHandler(
-    OnCompleteHandler on_complete
+    std::function<void(Query)> on_complete
 ) -> void
 {
-    m_on_complete = on_complete;
+    m_on_complete = std::move(on_complete);
 }
 
 auto QueryHandle::GetQueryStatus() const -> QueryStatus
