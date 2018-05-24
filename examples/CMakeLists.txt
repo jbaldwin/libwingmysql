@@ -4,7 +4,7 @@ project(libwingmysql_examples)
 message("MYSQL_CLIENT_LIB (examples) = ${MYSQL_CLIENT_LIB}")
 message("MYSQL_CLIENT_INCLUDE (examples) = ${MYSQL_CLIENT_INCLUDE}")
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/bin)
 
 ### synch_simple ###
 set(SYNCH_SIMPLE_SOURCE_FILES

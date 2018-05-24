@@ -9,6 +9,7 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
+#include <functional>
 
 #include <uv.h>
 #include <mysql/mysql.h>
@@ -44,7 +45,7 @@ public:
      * @param on_complete The on complete function handle for this query.
      */
     auto SetOnCompleteHandler(
-        OnCompleteHandler on_complete
+        std::function<void(Query)> on_complete
     ) -> void;
 
     /**
@@ -70,7 +71,9 @@ public:
      * the parameters
      * @param statement the statement set for this query
      */
-    auto SetStatement(Statement statement) -> void;
+    auto SetStatement(
+        Statement statement
+    ) -> void;
 
     /**
      * @return the original query that was executed
@@ -115,16 +118,24 @@ public:
      * @param idx The row to fetch.
      * @return The row.
      */
-    auto GetRow(size_t idx) const -> const Row&;
+    auto GetRow(
+        size_t idx
+    ) const -> const Row&;
 
     /**
      * @param user_data Sets a user defined data pointer for this query.
+     * @deprecated Use std::bind or lambda captures via OnCompleteHandler.
      */
-    auto SetUserData(void* user_data) -> void;
+    [[deprecated]]
+    auto SetUserData(
+        void* user_data
+    ) -> void;
 
     /**
      * @return Gets the user defined data pointer for this query.
+     * @deprecated Use std::bind or lambda captures via OnCompleteHandler.
      */
+    [[deprecated]]
     auto GetUserData() const -> void*;
 
 private:
@@ -132,7 +143,7 @@ private:
         EventLoop* event_loop,
         QueryPool& query_pool,
         const ConnectionInfo& connection,
-        OnCompleteHandler on_complete,
+        std::function<void(Query)> on_complete,
         std::chrono::milliseconds timeout,
         Statement statement
     );
@@ -157,10 +168,10 @@ private:
      */
     auto freeResult() -> void;
 
-    EventLoop* m_event_loop;            ///< Asynchronous queries will have an event loop. nullptr for synchronous requests.
-    QueryPool& m_query_pool;            ///< Every query must have a query pool.
-    const ConnectionInfo& m_connection; ///< Connection information for the MySQL server.
-    OnCompleteHandler m_on_complete;    ///< On complete function handler for this query.
+    EventLoop* m_event_loop;                  ///< Asynchronous queries will have an event loop. nullptr for synchronous requests.
+    QueryPool& m_query_pool;                  ///< Every query must have a query pool.
+    const ConnectionInfo& m_connection;       ///< Connection information for the MySQL server.
+    std::function<void(Query)> m_on_complete; ///< On complete function handler for this query.
 
     std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
     MYSQL m_mysql;

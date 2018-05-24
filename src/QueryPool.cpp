@@ -47,7 +47,7 @@ auto QueryPool::Produce(
 auto QueryPool::Produce(
     Statement statement,
     std::chrono::milliseconds timeout,
-    OnCompleteHandler on_complete
+    std::function<void(Query)> on_complete
 ) -> Query
 {
     m_lock.lock();
@@ -61,7 +61,7 @@ auto QueryPool::Produce(
                     m_event_loop,
                     *this,
                     m_connection,
-                    on_complete,
+                    std::move(on_complete),
                     timeout,
                     std::move(statement)
                 )
@@ -74,10 +74,9 @@ auto QueryPool::Produce(
         m_queries.pop_back();
         m_lock.unlock();
 
-        request_handle_ptr->SetOnCompleteHandler(on_complete);
+        request_handle_ptr->SetOnCompleteHandler(std::move(on_complete));
         request_handle_ptr->SetTimeout(timeout);
         request_handle_ptr->SetStatement(std::move(statement));
-        request_handle_ptr->SetUserData(nullptr); // reset user data too
 
         return Query(std::move(request_handle_ptr));
     }
