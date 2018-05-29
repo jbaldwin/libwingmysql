@@ -50,7 +50,7 @@ QueryHandle::QueryHandle(
     mysql_options(&m_mysql, MYSQL_OPT_SSL_ENFORCE, &ssl);
 
     //  Some mysql libraries do not support SSL_MODE_DISABLED
-#ifdef SSL_MODE_DISABLED
+#ifdef WING_PERCONA_SSL_DISABLED
     uint32_t ssl_mode = SSL_MODE_DISABLED;
     mysql_options(&m_mysql, MYSQL_OPT_SSL_MODE, &ssl_mode);
 #endif

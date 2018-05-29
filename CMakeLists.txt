@@ -3,6 +3,8 @@ project(wingmysql CXX)
 
 message(${CMAKE_CXX_COMPILER_ID})
 
+option(WING_PERCONA_SSL_DISABLED "Disable Percona MySQL SSL" OFF)
+
 set(MYSQL_CLIENT_LIB "libmysqlclient_r.so" CACHE STRING "User specified mysql-client location.")
 message("MYSQL_CLIENT_LIB = ${MYSQL_CLIENT_LIB}")
 
@@ -31,6 +33,10 @@ ENDIF()
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -Weffc++ -Werror -Wpedantic -pedantic-errors -MD ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -gdwarf-2 -D_GLIBCXX_DEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -g -gdwarf-2")
+
+if (WING_PERCONA_SSL_DISABLED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWING_PERCONA_SSL_DISABLED")
+ENDIF()
 
 set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/ConnectionInfo.h src/ConnectionInfo.cpp
