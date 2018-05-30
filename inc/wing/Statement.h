@@ -81,7 +81,7 @@ private:
         bool m_requires_escaping;
     };
 
-    std::vector<StatementPart> m_statement_parts; ///< all parts of the statement, bound or otherwise
+    std::vector<StatementPart> m_statement_parts{}; ///< all parts of the statement, bound or otherwise
 
     /**
      * Prepares a final string statement for use in MySQL by escaping all bound

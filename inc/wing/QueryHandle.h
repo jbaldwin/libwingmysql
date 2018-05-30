@@ -185,7 +185,7 @@ private:
 
     QueryStatus m_query_status;         ///< The status of the last query.
     Statement m_statement;              ///< The SQL statement for this query
-    std::string m_final_statement;      ///< The SQL statement that was last executed
+    std::string m_final_statement{};    ///< The SQL statement that was last executed
 
     void* m_user_data;                  ///< User provided data.
 
