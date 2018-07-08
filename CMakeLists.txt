@@ -39,12 +39,12 @@ endif()
 
 option(D_GLIBCXX_DEBUG "Use D_GLIBCXX_DEBUG when building Debug" ON)
 
-message("MYSQL_CLIENT_INCLUDE = ${MYSQL_CLIENT_INCLUDE}")
-message("MYSQL_CLIENT_LIB = ${MYSQL_CLIENT_LIB}")
-message("SSL_INCLUDE = ${SSL_INCLUDE}")
-message("SSL_LIB = ${SSL_LIB}")
-message("CRYPTO_LIB = ${CRYPTO_LIB}")
-message("D_GLIBCXX_DEBUG=${D_GLIBCXX_DEBUG}")
+message("${PROJECT_NAME} MYSQL_CLIENT_INCLUDE = ${MYSQL_CLIENT_INCLUDE}")
+message("${PROJECT_NAME} MYSQL_CLIENT_LIB = ${MYSQL_CLIENT_LIB}")
+message("${PROJECT_NAME} SSL_INCLUDE = ${SSL_INCLUDE}")
+message("${PROJECT_NAME} SSL_LIB = ${SSL_LIB}")
+message("${PROJECT_NAME} CRYPTO_LIB = ${CRYPTO_LIB}")
+message("${PROJECT_NAME} D_GLIBCXX_DEBUG=${D_GLIBCXX_DEBUG}")
 
 # Set some general system dependencides.
 set(WING_SYSTEM_LIBRARY_DEPENDENCIES
@@ -135,6 +135,7 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    message("${PROJECT_NAME} is building Debug")
     target_compile_options(
         ${PROJECT_NAME} PRIVATE
             -O0
@@ -142,13 +143,14 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
             -gdwarf-2
     )
     if(D_GLIBCXX_DEBUG)
-        message("D_GLIBCXX_DEBUG is ON")
+        message("${PROJECT_NAME} D_GLIBCXX_DEBUG is ON")
         target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_DEBUG)
     else()
-        message("D_GLIBCXX_DEBUG is OFF")
+        message("${PROJECT_NAME} D_GLIBCXX_DEBUG is OFF")
     endif()
 
 else() # "Release"
+    message("${PROJECT_NAME} is building Release")
     target_compile_options(
         ${PROJECT_NAME} PRIVATE
             -O2
