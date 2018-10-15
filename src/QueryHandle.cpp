@@ -233,7 +233,8 @@ auto QueryHandle::parseRows() -> void
         MYSQL_ROW mysql_row = nullptr;
         while ((mysql_row = mysql_fetch_row(m_result)))
         {
-            Row row(mysql_row, m_field_count);
+            auto lengths = mysql_fetch_lengths(m_result);
+            Row row(mysql_row, m_field_count, lengths);
             m_rows.emplace_back(std::move(row));
         }
     }
