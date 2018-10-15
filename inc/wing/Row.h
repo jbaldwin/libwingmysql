@@ -37,7 +37,8 @@ public:
 private:
     Row(
         MYSQL_ROW mysql_row,
-        size_t field_count
+        size_t field_count,
+        unsigned long* lengths
     );
 
     std::vector<Value> m_values;

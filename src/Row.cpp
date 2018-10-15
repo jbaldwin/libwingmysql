@@ -7,7 +7,8 @@ namespace wing
 
 Row::Row(
     MYSQL_ROW mysql_row,
-    size_t field_count
+    size_t field_count,
+    unsigned long* lengths
 )
     : m_values(),
       m_column_count(field_count)
@@ -19,7 +20,8 @@ Row::Row(
         std::string_view data{};
         if(mysql_value != nullptr)
         {
-            data = std::string_view(mysql_value, std::strlen(mysql_value));
+            auto length = (lengths != nullptr) ? lengths[i] : std::strlen(mysql_value);
+            data = std::string_view(mysql_value, length);
         }
         Value value(data);
         m_values.emplace_back(value);
