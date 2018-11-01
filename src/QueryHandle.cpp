@@ -210,7 +210,7 @@ auto QueryHandle::connect() -> bool
             m_connection.GetPassword().c_str(),
             m_connection.GetDatabase().c_str(),
             m_connection.GetPort(),
-            "0",
+            m_connection.GetSocket().c_str(),
             m_connection.GetClientFlags()
         );
 
