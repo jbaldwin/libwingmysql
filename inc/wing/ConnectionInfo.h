@@ -20,6 +20,7 @@ public:
     ConnectionInfo(
         std::string host,
         uint16_t port,
+        std::string socket,
         std::string user,
         std::string password,
         std::string database = "",
@@ -35,6 +36,11 @@ public:
      * @return The MySQL server port.
      */
     auto GetPort() const -> uint16_t;
+
+    /**
+     * @return The MySQL unix-socket.
+     */
+    auto GetSocket() const -> const std::string&;
 
     /**
      * @return The MySQL user to authenticate with.
@@ -59,6 +65,7 @@ public:
 private:
     std::string m_host;
     uint16_t    m_port;
+    std::string m_socket;
     std::string m_user;
     std::string m_password;
     std::string m_database;
