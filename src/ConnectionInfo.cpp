@@ -6,6 +6,7 @@ namespace wing
 ConnectionInfo::ConnectionInfo(
     std::string host,
     uint16_t port,
+    std::string socket,
     std::string user,
     std::string password,
     std::string database,
