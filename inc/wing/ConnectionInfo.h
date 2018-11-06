@@ -20,6 +20,21 @@ public:
     ConnectionInfo(
         std::string host,
         uint16_t port,
+        std::string user,
+        std::string password,
+        std::string database = "",
+        uint64_t client_flags = 0
+    );
+
+    /**
+     * Creates connection information for which MySQL server to connect to.
+     * @param socket The unix-socket to communicate over.
+     * @param user The user to authenticate with.
+     * @param password The password to authenticate with.
+     * @param database The database to use upon connecting (optional).
+     * @param client_flags MySQL client flags (optional).
+     */
+    ConnectionInfo(
         std::string socket,
         std::string user,
         std::string password,
