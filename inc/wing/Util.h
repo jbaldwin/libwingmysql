@@ -10,7 +10,7 @@ namespace wing
 /**
  * gets a thread local stream
  *
- * NOTE: palces that use this must never call each other
+ * NOTE: places that use this must never call each other
  * If this stream is ever used in another method it must not be able to recursively
  * call itself or another method that uses this stream or they can trample each other
  *

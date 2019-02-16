@@ -30,7 +30,7 @@ Statement::Arg::Arg(const T& parameter_value)
     }
     if(m_string_value.empty())
     {
-        throw std::invalid_argument("Argument evaulates to empty string");
+        throw std::invalid_argument("Argument evaluates to empty string");
     }
 }
 
@@ -47,17 +47,21 @@ auto Statement::operator << (const T& statement_part) -> Statement&
 template <typename EscapeFunctor>
 auto Statement::prepareStatement(EscapeFunctor escape_functor) -> std::string
 {
-    std::string final_statement;
+    auto& stream = get_thread_local_stream();
 
-    for (auto& part : m_statement_parts) {
-        if (part.m_requires_escaping) {
-            final_statement.append(escape_functor(part.m_string_value));
-        } else {
-            final_statement.append(part.m_string_value);
+    for (auto& part : m_statement_parts)
+    {
+        if(part.m_requires_escaping)
+        {
+            stream << escape_functor(part.m_string_value);
+        }
+        else
+        {
+            stream << part.m_string_value;
         }
     }
 
-    return final_statement;
+    return stream.str();
 }
 
 } // wing
