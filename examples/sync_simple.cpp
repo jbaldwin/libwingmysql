@@ -21,7 +21,7 @@ static auto run_query(wing::QueryHandle& query) -> void
                 }
                 else
                 {
-                    std::cout << value.AsString() << " ";
+                    std::cout << value.AsStringView() << " ";
                 }
             }
             std::cout << "\n";

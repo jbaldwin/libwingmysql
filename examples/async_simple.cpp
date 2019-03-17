@@ -26,7 +26,7 @@ static auto on_complete(wing::QueryHandle request) -> void
                 }
                 else
                 {
-                    std::cout << value.AsString() << " ";
+                    std::cout << value.AsStringView() << " ";
                 }
             }
             std::cout << "\n";

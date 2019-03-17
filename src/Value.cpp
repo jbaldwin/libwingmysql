@@ -17,7 +17,7 @@ auto Value::IsNull() const -> bool {
     return m_data.empty();
 }
 
-auto Value::AsString() const -> const std::string_view {
+auto Value::AsStringView() const -> const std::string_view {
     return m_data;
 }
 

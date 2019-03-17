@@ -57,7 +57,7 @@ See all of the examples under the examples/ directory.
             {
                 // If the field is nullable, use IsNull() to check before using the value.
                 // Use As<T> functions to convert the data into the columns type
-                std::cout << value.AsString() << " ";
+                std::cout << value.AsStringView() << " ";
             }
             std::cout << "\n";
         }
