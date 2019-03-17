@@ -25,17 +25,7 @@ auto requests_accept_for_query_async(
 EventLoop::EventLoop(
     ConnectionInfo connection
 )
-    : m_query_pool(std::move(connection), this),
-      m_is_query_running(false),
-      m_is_stopping(false),
-      m_active_query_count(0),
-      m_background_query_thread(),
-      m_query_loop(uv_loop_new()),
-      m_query_async(),
-      m_query_async_closed(false),
-      m_pending_queries_lock(),
-      m_pending_queries(),
-      m_grabbed_queries()
+    :   m_query_pool(std::move(connection), this)
 {
     uv_async_init(m_query_loop, &m_query_async, requests_accept_for_query_async);
     m_query_async.data = this;

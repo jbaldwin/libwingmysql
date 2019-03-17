@@ -10,8 +10,7 @@ Row::Row(
     size_t field_count,
     unsigned long* lengths
 )
-    : m_values(),
-      m_column_count(field_count)
+    :   m_column_count(field_count)
 {
     m_values.reserve(field_count);
     for(size_t i = 0; i < field_count; ++i)

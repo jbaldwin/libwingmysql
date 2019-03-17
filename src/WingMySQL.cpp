@@ -20,9 +20,9 @@ auto startup() -> void
 
 auto startup_thread() -> void
 {
-    thread_local std::atomic<uint64_t> initalized{0};
+    thread_local std::atomic<uint64_t> initialized{0};
 
-    if(initalized.fetch_add(1) == 0)
+    if(initialized.fetch_add(1) == 0)
     {
         mysql_thread_init();
     }
@@ -30,9 +30,9 @@ auto startup_thread() -> void
 
 auto shutdown_thread() -> void
 {
-    thread_local std::atomic<uint64_t> initalized{0};
+    thread_local std::atomic<uint64_t> initialized{0};
 
-    if(initalized.fetch_add(1) == 0)
+    if(initialized.fetch_add(1) == 0)
     {
         mysql_thread_end();
     }

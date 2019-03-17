@@ -28,10 +28,10 @@ public:
 
     ~EventLoop();
 
-    EventLoop(const EventLoop& copy) = delete;                              ///< No copying
-    EventLoop(EventLoop&& move) = default;                                  ///< Can move
-    auto operator = (const EventLoop& copy_assign) -> EventLoop& = delete;  ///< No copy assign
-    auto operator = (EventLoop&& move_assign) -> EventLoop& = default;      ///< Can move assign
+    EventLoop(const EventLoop& copy) = delete;
+    EventLoop(EventLoop&& move) = delete;
+    auto operator = (const EventLoop& copy_assign) -> EventLoop& = delete;
+    auto operator = (EventLoop&& move_assign) -> EventLoop& = delete;
 
     /**
      * @return True if the query and connect threads are running.
@@ -73,14 +73,14 @@ public:
 private:
     QueryPool m_query_pool;
 
-    std::atomic<bool> m_is_query_running;
-    std::atomic<bool> m_is_stopping;
-    std::atomic<uint64_t> m_active_query_count;
+    std::atomic<bool> m_is_query_running{false};
+    std::atomic<bool> m_is_stopping{false};
+    std::atomic<uint64_t> m_active_query_count{0};
 
     std::thread m_background_query_thread;
-    uv_loop_t* m_query_loop;
+    uv_loop_t* m_query_loop{uv_loop_new()};
     uv_async_t m_query_async;
-    std::atomic<bool> m_query_async_closed;
+    std::atomic<bool> m_query_async_closed{false};
     std::mutex m_pending_queries_lock;
     std::vector<Query> m_pending_queries;
     std::vector<Query> m_grabbed_queries;

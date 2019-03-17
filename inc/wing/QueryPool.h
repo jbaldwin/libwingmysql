@@ -30,10 +30,10 @@ public:
      */
     explicit QueryPool(ConnectionInfo connection);
 
-    QueryPool(const QueryPool&) = delete;                       ///< No copying
-    QueryPool(QueryPool&&) = default;                           ///< Can move
-    auto operator = (const QueryPool&) -> QueryPool& = delete;  ///< No copy assign
-    auto operator = (QueryPool&&) -> QueryPool& = default;      ///< Can move assign
+    QueryPool(const QueryPool&) = delete;
+    QueryPool(QueryPool&&) = delete;
+    auto operator = (const QueryPool&) -> QueryPool& = delete;
+    auto operator = (QueryPool&&) -> QueryPool& = delete;
 
     /**
      * @return The MySQL Server connection information for this pool.
@@ -51,6 +51,13 @@ public:
         std::chrono::milliseconds timeout
     ) -> Query;
 
+    /**
+     * Produces a Query from the pool with the provided query, timeout and on complete callback.
+     * @param statement The SQL statement, can contain bind parameters.
+     * @param timeout The timeout for this query in milliseconds.
+     * @param on_complete Completion callback.
+     * @return A Query handle.
+     */
     auto Produce(
         Statement statement,
         std::chrono::milliseconds timeout,
@@ -59,7 +66,7 @@ public:
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
-    EventLoop* m_event_loop;
+    EventLoop* m_event_loop{nullptr};
     std::deque<std::unique_ptr<QueryHandle>> m_queries;
 
     explicit QueryPool(

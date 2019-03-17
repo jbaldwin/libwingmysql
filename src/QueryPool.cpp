@@ -7,10 +7,7 @@ namespace wing
 QueryPool::QueryPool(
     ConnectionInfo connection
 )
-    : m_lock(),
-      m_connection(std::move(connection)),
-      m_event_loop(nullptr),
-      m_queries()
+    :   m_connection(std::move(connection))
 {
 
 }
@@ -19,10 +16,8 @@ QueryPool::QueryPool(
     ConnectionInfo connection,
     EventLoop* event_loop
 )
-    : m_lock(),
-      m_connection(std::move(connection)),
-      m_event_loop(event_loop),
-      m_queries()
+    :   m_connection(std::move(connection)),
+        m_event_loop(event_loop)
 {
 
 }

@@ -18,10 +18,10 @@ class Query
     friend class EventLoop;
 public:
     ~Query();
-    Query(const Query&) = delete;                   ///< No copying
-    Query(Query&& from);                  ///< Can move
-    auto operator = (const Query&) = delete;        ///< No copy assign
-    auto operator = (Query&&) -> Query&;  ///< Can move assign
+    Query(const Query&) = delete;
+    Query(Query&& from);
+    auto operator = (const Query&) = delete;
+    auto operator = (Query&&) -> Query&;
 
     /**
      * Access to the SQL Query object.

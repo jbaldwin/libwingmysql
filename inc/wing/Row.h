@@ -16,10 +16,10 @@ class Row
     friend QueryHandle;
 public:
     ~Row() = default;
-    Row(const Row&) = delete;                       ///< No copying
-    Row(Row&&) = default;                           ///< Can move
-    auto operator = (const Row&) -> Row& = delete;  ///< No copying
-    auto operator = (Row&&) -> Row& = default;      ///< Can move
+    Row(const Row&) = delete;
+    Row(Row&&) = default;
+    auto operator = (const Row&) -> Row& = delete;
+    auto operator = (Row&&) -> Row& = default;
 
     /**
      * @return The number of values/columns in this row.

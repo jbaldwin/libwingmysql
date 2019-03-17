@@ -19,22 +19,12 @@ QueryHandle::QueryHandle(
     std::chrono::milliseconds timeout,
     Statement statement
 )
-    : m_event_loop(event_loop),
-      m_query_pool(query_pool),
-      m_connection(connection),
-      m_on_complete(std::move(on_complete)),
-      m_timeout(timeout),
-      m_mysql(),
-      m_result(nullptr),
-      m_parsed_result(false),
-      m_field_count(0),
-      m_row_count(0),
-      m_rows(),
-      m_is_connected(false),
-      m_had_error(false),
-      m_query_status(QueryStatus::BUILDING),
-      m_statement(std::move(statement)),
-      m_user_data(nullptr)
+    :   m_event_loop(event_loop),
+        m_query_pool(query_pool),
+        m_connection(connection),
+        m_on_complete(std::move(on_complete)),
+        m_timeout(timeout),
+        m_statement(std::move(statement))
 {
     mysql_init(&m_mysql);
 
@@ -66,7 +56,6 @@ auto QueryHandle::Reset() -> void {
     freeResult();
     m_statement = Statement();
     m_query_status = QueryStatus::BUILDING;
-    m_user_data = nullptr;
     m_had_error = false;
 }
 
@@ -187,16 +176,6 @@ auto QueryHandle::GetRowCount() const -> size_t
 auto QueryHandle::GetRow(size_t idx) const -> const Row&
 {
     return m_rows.at(idx);
-}
-
-auto QueryHandle::SetUserData(void* user_data) -> void
-{
-    m_user_data = user_data;
-}
-
-auto QueryHandle::GetUserData() const -> void*
-{
-    return m_user_data;
 }
 
 auto QueryHandle::connect() -> bool

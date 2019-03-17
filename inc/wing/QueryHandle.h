@@ -21,8 +21,6 @@ class EventLoop;
 class QueryPool;
 class Query;
 
-using OnCompleteHandler = void(*)(Query);
-
 class QueryHandle
 {
     friend EventLoop;
@@ -31,10 +29,10 @@ class QueryHandle
 public:
     ~QueryHandle();
 
-    QueryHandle(const QueryHandle&) = delete;                   ///< No copying
-    QueryHandle(QueryHandle&&) = default;                       ///< Can move
-    auto operator = (const QueryHandle&) = delete;              ///< No copy assign
-    auto operator = (QueryHandle&&) -> QueryHandle& = default;  ///< Can move assign
+    QueryHandle(const QueryHandle&) = delete;
+    QueryHandle(QueryHandle&&) = delete;
+    auto operator = (const QueryHandle&) = delete;
+    auto operator = (QueryHandle&&) -> QueryHandle& = delete;
 
     /**
      * Resets QueryHandle, freeing results and clearing m_query_parts and m_bind_params
@@ -122,22 +120,6 @@ public:
         size_t idx
     ) const -> const Row&;
 
-    /**
-     * @param user_data Sets a user defined data pointer for this query.
-     * @deprecated Use std::bind or lambda captures via OnCompleteHandler.
-     */
-    [[deprecated]]
-    auto SetUserData(
-        void* user_data
-    ) -> void;
-
-    /**
-     * @return Gets the user defined data pointer for this query.
-     * @deprecated Use std::bind or lambda captures via OnCompleteHandler.
-     */
-    [[deprecated]]
-    auto GetUserData() const -> void*;
-
 private:
     QueryHandle(
         EventLoop* event_loop,
@@ -168,26 +150,38 @@ private:
      */
     auto freeResult() -> void;
 
-    EventLoop* m_event_loop;                  ///< Asynchronous queries will have an event loop. nullptr for synchronous requests.
-    QueryPool& m_query_pool;                  ///< Every query must have a query pool.
-    const ConnectionInfo& m_connection;       ///< Connection information for the MySQL server.
-    std::function<void(Query)> m_on_complete; ///< On complete function handler for this query.
+    /// Asynchronous queries will have an event loop. nullptr for synchronous requests.
+    EventLoop* m_event_loop;
+    /// Every query must have a query pool.
+    QueryPool& m_query_pool;
+    /// Connection information for the MySQL server.
+    const ConnectionInfo& m_connection;
+    /// On complete function handler for this query.
+    std::function<void(Query)> m_on_complete;
 
-    std::chrono::milliseconds m_timeout;///< The timeout in milliseconds.
+    /// The timeout in milliseconds.
+    std::chrono::milliseconds m_timeout;
     MYSQL m_mysql;
-    MYSQL_RES* m_result;
-    bool m_parsed_result;               ///< True if the result has already been parsed (to avoid doing it multiple times).
-    size_t m_field_count;               ///< The number of fields returned from the query.
-    size_t m_row_count;                 ///< The number of rows returned from the query.
-    std::vector<Row> m_rows;            ///< User facing rows view.
-    bool m_is_connected;                ///< Has this MySQL client connected to the server yet?
-    bool m_had_error;                   ///< Has this MySQL client had an error?
+    MYSQL_RES* m_result{nullptr};
+    /// True if the result has already been parsed (to avoid doing it multiple times).
+    bool m_parsed_result{false};
+    /// The number of fields returned from the query.
+    size_t m_field_count{0};
+    /// The number of rows returned from the query.
+    size_t m_row_count{0};
+    /// User facing rows view.
+    std::vector<Row> m_rows;
+    /// Has this MySQL client connected to the server yet?
+    bool m_is_connected{false};
+    /// Has this MySQL client had an error?
+    bool m_had_error{false};
 
-    QueryStatus m_query_status;         ///< The status of the last query.
-    Statement m_statement;              ///< The SQL statement for this query
-    std::string m_final_statement{};    ///< The SQL statement that was last executed
-
-    void* m_user_data;                  ///< User provided data.
+    /// The status of the last query.
+    QueryStatus m_query_status{QueryStatus::BUILDING};
+    /// The SQL statement for this query
+    Statement m_statement;
+    /// The SQL statement that was last executed
+    std::string m_final_statement;
 
     friend auto on_uv_query_execute_callback(
         uv_work_t* req

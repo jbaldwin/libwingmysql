@@ -10,9 +10,9 @@ namespace wing
 /**
  * gets a thread local stream
  *
- * NOTE: palces that use this must never call each other
+ * NOTE: places that use this must never call each other
  * If this stream is ever used in another method it must not be able to recursively
- * call itself or another method that uses this stream or they can trample each other
+ * call itself or another method that uses this stream or they can trample each other.
  *
  * @return a reference to a stringstream unique to the calling thread
  */
@@ -25,7 +25,7 @@ auto get_thread_local_stream() -> std::stringstream&;
  * @return String views into each partition.
  */
 auto split_view(
-    const std::string_view s,
+    std::string_view s,
     char delim
 ) -> std::vector<std::string_view>;
 
@@ -36,8 +36,8 @@ auto split_view(
  * @return String views into each partition.
  */
 auto split_view(
-    const std::string_view s,
-    const std::string_view delim
+    std::string_view s,
+    std::string_view delim
 ) -> std::vector<std::string_view>;
 
 } // wing

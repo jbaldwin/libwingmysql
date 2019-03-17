@@ -8,7 +8,7 @@ namespace wing
 Query::Query(
     std::unique_ptr<QueryHandle> query_handle
 )
-    : m_query_handle(std::move(query_handle))
+    :   m_query_handle(std::move(query_handle))
 {
 
 }
@@ -23,7 +23,7 @@ Query::~Query()
 }
 
 Query::Query(Query&& from)
-    : m_query_handle(std::move(from.m_query_handle))
+    :   m_query_handle(std::move(from.m_query_handle))
 {
 
 }

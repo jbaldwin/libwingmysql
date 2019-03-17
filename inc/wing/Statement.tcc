@@ -6,7 +6,9 @@
 namespace wing {
 
 template <typename T>
-Statement::Arg::Arg(const T& parameter_value)
+Statement::Arg::Arg(
+    const T& parameter_value
+)
 {
     using RawType = typename std::remove_cv<T>::type;
 
@@ -35,7 +37,9 @@ Statement::Arg::Arg(const T& parameter_value)
 }
 
 template <typename T>
-auto Statement::operator << (const T& statement_part) -> Statement&
+auto Statement::operator << (
+    const T& statement_part
+) -> Statement&
 {
     auto& stream = get_thread_local_stream();
     stream << statement_part;
@@ -45,7 +49,9 @@ auto Statement::operator << (const T& statement_part) -> Statement&
 }
 
 template <typename EscapeFunctor>
-auto Statement::prepareStatement(EscapeFunctor escape_functor) -> std::string
+auto Statement::prepareStatement(
+    EscapeFunctor escape_functor
+) -> std::string
 {
     std::string final_statement;
 
