@@ -1,7 +1,7 @@
 #pragma once
 
-#include "wing/Query.h"
 #include "wing/QueryHandle.h"
+#include "wing/Query.h"
 #include "wing/ConnectionInfo.h"
 
 #include <deque>
@@ -18,7 +18,7 @@ class EventLoop;
 class QueryPool
 {
     friend EventLoop;
-    friend Query;
+    friend QueryHandle;
 public:
     ~QueryPool();
 
@@ -49,7 +49,7 @@ public:
     auto Produce(
         Statement statement,
         std::chrono::milliseconds timeout
-    ) -> Query;
+    ) -> QueryHandle;
 
     /**
      * Produces a Query from the pool with the provided query, timeout and on complete callback.
@@ -61,13 +61,13 @@ public:
     auto Produce(
         Statement statement,
         std::chrono::milliseconds timeout,
-        std::function<void(Query)> on_complete
-    ) -> Query;
+        std::function<void(QueryHandle)> on_complete
+    ) -> QueryHandle;
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
     EventLoop* m_event_loop{nullptr};
-    std::deque<std::unique_ptr<QueryHandle>> m_queries;
+    std::deque<std::unique_ptr<Query>> m_queries;
 
     explicit QueryPool(
         ConnectionInfo connection,
@@ -75,7 +75,7 @@ private:
     );
 
     auto returnQuery(
-        std::unique_ptr<QueryHandle> query_handle
+        std::unique_ptr<Query> query_handle
     ) -> void;
 
     auto close() -> void;

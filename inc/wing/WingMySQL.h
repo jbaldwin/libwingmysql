@@ -2,8 +2,8 @@
 
 #include "wing/ConnectionInfo.h"
 #include "wing/EventLoop.h"
-#include "wing/Query.h"
 #include "wing/QueryHandle.h"
+#include "wing/Query.h"
 #include "wing/QueryPool.h"
 #include "wing/QueryStatus.h"
 

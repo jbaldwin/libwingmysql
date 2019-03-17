@@ -13,7 +13,7 @@ namespace wing
  */
 class Statement
 {
-    friend class QueryHandle;
+    friend class Query;
 public:
     /**
      * Arg structure, which can be constructed and streamed into a Statement to provide

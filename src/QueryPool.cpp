@@ -35,24 +35,24 @@ auto QueryPool::GetConnection() const -> const ConnectionInfo&
 auto QueryPool::Produce(
     Statement statement,
     std::chrono::milliseconds timeout
-) -> Query {
+) -> QueryHandle {
     return Produce(std::move(statement), timeout, nullptr);
 }
 
 auto QueryPool::Produce(
     Statement statement,
     std::chrono::milliseconds timeout,
-    std::function<void(Query)> on_complete
-) -> Query
+    std::function<void(QueryHandle)> on_complete
+) -> QueryHandle
 {
     m_lock.lock();
     if(m_queries.empty())
     {
         m_lock.unlock();
-        return Query(
+        return QueryHandle(
             // Calling new instead of std::make_unique since the ctor is private
-            std::unique_ptr<QueryHandle>(
-                new QueryHandle(
+            std::unique_ptr<Query>(
+                new Query(
                     m_event_loop,
                     *this,
                     m_connection,
@@ -73,12 +73,12 @@ auto QueryPool::Produce(
         request_handle_ptr->SetTimeout(timeout);
         request_handle_ptr->SetStatement(std::move(statement));
 
-        return Query(std::move(request_handle_ptr));
+        return QueryHandle(std::move(request_handle_ptr));
     }
 }
 
 auto QueryPool::returnQuery(
-    std::unique_ptr<QueryHandle> query_handle
+    std::unique_ptr<Query> query_handle
 ) -> void
 {
     // If the handle has had any kind of error while processing

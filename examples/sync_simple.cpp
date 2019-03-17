@@ -2,7 +2,7 @@
 
 #include <wing/WingMySQL.h>
 
-static auto run_query(wing::Query& query) -> void
+static auto run_query(wing::QueryHandle& query) -> void
 {
     auto status = query->Execute();
     if(status == wing::QueryStatus::SUCCESS)

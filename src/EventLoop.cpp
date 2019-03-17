@@ -114,7 +114,7 @@ auto EventLoop::GetQueryPool() -> QueryPool&
 }
 
 auto EventLoop::StartQuery(
-    Query query
+    QueryHandle query
 ) -> bool
 {
     // Do not accept new queries if shutting down.
@@ -148,14 +148,14 @@ auto EventLoop::run_queries() -> void
     mysql_thread_end();
 }
 
-auto EventLoop::callOnComplete(Query query) -> void {
+auto EventLoop::callOnComplete(QueryHandle query) -> void {
     auto on_complete = query->m_on_complete;
     on_complete(std::move(query));
 }
 
-auto EventLoop::callOnComplete(std::unique_ptr<QueryHandle> query_handle) -> void {
+auto EventLoop::callOnComplete(std::unique_ptr<Query> query_handle) -> void {
     auto on_complete = query_handle->m_on_complete;
-    on_complete(Query(std::move(query_handle)));
+    on_complete(QueryHandle(std::move(query_handle)));
 }
 
 auto EventLoop::onClose(
@@ -182,7 +182,7 @@ auto EventLoop::requestsAcceptForQueryAsync(
         /**
          * This is moving ownership into libuv while the query is executed.
          */
-        QueryHandle* query_handle = query.m_query_handle.release();
+        Query* query_handle = query.m_query_handle.release();
 
         auto* work = new uv_work_t();
         work->data = query_handle;
@@ -213,7 +213,7 @@ auto on_uv_query_execute_callback(
     /**
      * This function runs on an background libuv worker thread.
      */
-    auto* query_handle = static_cast<QueryHandle*>(req->data);
+    auto* query_handle = static_cast<Query*>(req->data);
     query_handle->Execute();
 }
 
@@ -226,9 +226,9 @@ auto on_complete_uv_query_execute_callback(
      * This function runs on the libuv query event loop thread.
      */
 
-    // Regain ownership of the QueryHandle from libuv.
-    std::unique_ptr<QueryHandle> query_handle_ptr(
-        static_cast<QueryHandle*>(req->data)
+    // Regain ownership of the Query from libuv.
+    std::unique_ptr<Query> query_handle_ptr(
+        static_cast<Query*>(req->data)
     );
     auto* event_loop = query_handle_ptr->m_event_loop;
     --event_loop->m_active_query_count;

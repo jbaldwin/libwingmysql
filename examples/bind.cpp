@@ -2,7 +2,7 @@
 
 #include <wing/WingMySQL.h>
 
-static auto on_complete(wing::Query request) -> void
+static auto on_complete(wing::QueryHandle request) -> void
 {
     std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
     std::cout << wing::to_string(request->GetQueryStatus()) << "\n";

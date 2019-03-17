@@ -49,8 +49,8 @@ ENDIF()
 set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/ConnectionInfo.h src/ConnectionInfo.cpp
     inc/wing/EventLoop.h src/EventLoop.cpp
-    inc/wing/Query.h src/Query.cpp
     inc/wing/QueryHandle.h src/QueryHandle.cpp
+    inc/wing/Query.h src/Query.cpp
     inc/wing/QueryPool.h src/QueryPool.cpp
     inc/wing/QueryStatus.h src/QueryStatus.cpp
     inc/wing/Row.h src/Row.cpp

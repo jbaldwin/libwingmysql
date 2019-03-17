@@ -37,7 +37,7 @@ static auto print_stats(
     std::cout << "Requests/sec: " << (total / static_cast<double>(duration_s)) << "\n";
 }
 
-static auto on_complete(wing::Query request, wing::EventLoop& event_loop) -> void
+static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) -> void
 {
     ++count;
     if(request->HasError())

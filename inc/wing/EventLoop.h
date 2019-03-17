@@ -16,7 +16,7 @@ namespace wing
 
 class EventLoop
 {
-    friend QueryHandle; ///< Required for libuv callbacks.
+    friend Query; ///< Required for libuv callbacks.
 public:
     /**
      * Creates an event loop to execute asynchronous MySQL queries.
@@ -67,7 +67,7 @@ public:
      * @return True if the query started.
      */
     auto StartQuery(
-        Query query
+        QueryHandle query
     ) -> bool;
 
 private:
@@ -82,16 +82,16 @@ private:
     uv_async_t m_query_async;
     std::atomic<bool> m_query_async_closed{false};
     std::mutex m_pending_queries_lock;
-    std::vector<Query> m_pending_queries;
-    std::vector<Query> m_grabbed_queries;
+    std::vector<QueryHandle> m_pending_queries;
+    std::vector<QueryHandle> m_grabbed_queries;
 
     auto run_queries() -> void;
 
     auto callOnComplete(
-        Query query
+        QueryHandle query
     ) -> void;
     auto callOnComplete(
-        std::unique_ptr<QueryHandle> query_handle
+        std::unique_ptr<Query> query_handle
     ) -> void;
 
     auto onClose(
