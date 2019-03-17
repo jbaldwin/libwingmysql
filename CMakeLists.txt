@@ -4,47 +4,22 @@ project(wingmysql CXX)
 # Create a Debug/lib or Release/lib output directory.
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/lib)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(WING_PERCONA_SSL_DISABLED "Disable Percona MySQL SSL" OFF)
 
-# Custom MySQL library/include locations.
-if(NOT "$ENV{MYSQL_CLIENT_INCLUDE}" STREQUAL "")
-    set(MYSQL_CLIENT_INCLUDE $ENV{MYSQL_CLIENT_INCLUDE})
-else()
-    set(MYSQL_CLIENT_INCLUDE "/usr/include/mysql" CACHE STRING "User specified mysql-client include location.")
-endif()
-
-if(NOT "$ENV{MYSQL_CLIENT_LIB}" STREQUAL "")
-    set(MYSQL_CLIENT_LIB $ENV{MYSQL_CLIENT_LIB})
-else()
-    set(MYSQL_CLIENT_LIB "libmysqlclient_r.so" CACHE STRING "User specified mysql-client location.")
-endif()
-
-if(NOT "$ENV{SSL_INCLUDE}" STREQUAL "")
-    set(SSL_INCLUDE $ENV{SSL_INCLUDE})
-else()
-    set(SSL_INCLUDE "" CACHE STRING "User specified ssl include location.")
-endif()
-
-if(NOT "$ENV{SSL_LIB}" STREQUAL "")
-    set(SSL_LIB $ENV{SSL_LIB})
-else()
-    set(SSL_LIB "ssl" CACHE STRING "User specified libssl location.")
-endif()
-
-if(NOT "$ENV{}" STREQUAL "")
-    set(CRYPTO_LIB $ENV{CRYPTO_LIB})
-else()
-    set(CRYPTO_LIB "crypto" CACHE STRING "User specified libcrypto location.")
-endif()
-
-option(D_GLIBCXX_DEBUG "Use D_GLIBCXX_DEBUG when building Debug" ON)
+set(MYSQL_CLIENT_INCLUDE "/usr/include/mysql" CACHE PATH "User specified mysql-client include location.")
+set(MYSQL_CLIENT_LIB "libmysqlclient_r.so" CACHE STRING "User specified mysql-client location.")
+set(SSL_INCLUDE "" CACHE PATH "User specified ssl include location.")
+set(SSL_LIB "ssl" CACHE STRING "User specified libssl location.")
+set(CRYPTO_LIB "crypto" CACHE STRING "User specified libcrypto location.")
 
 message("${PROJECT_NAME} MYSQL_CLIENT_INCLUDE = ${MYSQL_CLIENT_INCLUDE}")
 message("${PROJECT_NAME} MYSQL_CLIENT_LIB = ${MYSQL_CLIENT_LIB}")
 message("${PROJECT_NAME} SSL_INCLUDE = ${SSL_INCLUDE}")
 message("${PROJECT_NAME} SSL_LIB = ${SSL_LIB}")
 message("${PROJECT_NAME} CRYPTO_LIB = ${CRYPTO_LIB}")
-message("${PROJECT_NAME} D_GLIBCXX_DEBUG=${D_GLIBCXX_DEBUG}")
+message("${PROJECT_NAME} WING_PERCONA_SSL_DISABLED = ${WING_PERCONA_SSL_DISABLED}")
 
 # Set some general system dependencides.
 set(WING_SYSTEM_LIBRARY_DEPENDENCIES
@@ -86,7 +61,7 @@ set(LIB_WING_MYSQL_SOURCE_FILES
 )
 
 add_library(${PROJECT_NAME} STATIC ${LIB_WING_MYSQL_SOURCE_FILES})
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${WING_MYSQL_INCLUDE})
@@ -96,16 +71,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${WING_SYSTEM_LIBRARY_DEPENDENCIES}
 )
 
-target_compile_options(
-    ${PROJECT_NAME} PRIVATE
-        -Wall
-        -Wextra
-        -Weffc++
-        -Werror
-        -Wpedantic
-        -pedantic-errors
-        -MD
-)
+if(UNIX)
+    target_compile_options(
+        ${PROJECT_NAME} PRIVATE
+            -Wall
+            -Wextra
+            -Weffc++
+            -Werror
+            -Wpedantic
+            -pedantic-errors
+            -MD
+    )
+endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
     target_compile_options(
@@ -131,31 +108,6 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
             -Wno-covered-switch-default
             -fcolor-diagnostics
             -ferror-limit=128
-    )
-endif()
-
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    message("${PROJECT_NAME} is building Debug")
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE
-            -O0
-            -g
-            -gdwarf-2
-    )
-    if(D_GLIBCXX_DEBUG)
-        message("${PROJECT_NAME} D_GLIBCXX_DEBUG is ON")
-        target_compile_options(${PROJECT_NAME} PRIVATE -D_GLIBCXX_DEBUG)
-    else()
-        message("${PROJECT_NAME} D_GLIBCXX_DEBUG is OFF")
-    endif()
-
-else() # "Release"
-    message("${PROJECT_NAME} is building Release")
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE
-            -O2
-            -g
-            -gdwarf-2
     )
 endif()
 

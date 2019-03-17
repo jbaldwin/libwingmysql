@@ -13,6 +13,7 @@ set(SYNCH_SIMPLE_SOURCE_FILES
 add_executable(sync_simple ${SYNCH_SIMPLE_SOURCE_FILES})
 target_include_directories(sync_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
 target_link_libraries(sync_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(sync_simple PRIVATE cxx_std_17)
 
 ### async_simple ###
 set(ASYNC_SIMPLE_SOURCE_FILES
@@ -21,6 +22,7 @@ set(ASYNC_SIMPLE_SOURCE_FILES
 add_executable(async_simple ${ASYNC_SIMPLE_SOURCE_FILES})
 target_include_directories(async_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
 target_link_libraries(async_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(async_simple PRIVATE cxx_std_17)
 
 ### async_benchmarket ###
 set(ASYNC_BENCHMARKET_SOURCE_FILES
@@ -29,6 +31,7 @@ set(ASYNC_BENCHMARKET_SOURCE_FILES
 add_executable(async_benchmark ${ASYNC_BENCHMARKET_SOURCE_FILES})
 target_include_directories(async_benchmark SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
 target_link_libraries(async_benchmark PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(async_benchmark PRIVATE cxx_std_17)
 
 ### bind ###
 set(BIND_SOURCE_FILES
@@ -37,3 +40,4 @@ set(BIND_SOURCE_FILES
 add_executable(bind ${BIND_SOURCE_FILES})
 target_include_directories(bind SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
 target_link_libraries(bind PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(bind PRIVATE cxx_std_17)
