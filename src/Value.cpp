@@ -2,132 +2,133 @@
 
 #include <string>
 
-namespace wing
-{
+namespace wing {
 
 Value::Value(
-    std::string_view data
-)
+    std::string_view data)
     : m_data(data)
 {
-
 }
 
-auto Value::IsNull() const -> bool {
+auto Value::IsNull() const -> bool
+{
     return m_data.empty();
 }
 
-auto Value::AsStringView() const -> const std::string_view {
+auto Value::AsStringView() const -> const std::string_view
+{
     return m_data;
 }
 
-auto Value::AsUInt64() const -> uint64_t {
+auto Value::AsUInt64() const -> uint64_t
+{
     uint64_t value = 0;
-    try
-    {
+    try {
         value = std::stoul(std::string(m_data));
+    } catch (...) {
     }
-    catch(...) { }
 
     return value;
 }
 
-auto Value::AsInt64() const -> int64_t {
+auto Value::AsInt64() const -> int64_t
+{
     int64_t value = 0;
-    try
-    {
+    try {
         value = std::stol(std::string(m_data));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsUInt32() const -> uint32_t {
+auto Value::AsUInt32() const -> uint32_t
+{
     uint32_t value = 0;
-    try
-    {
+    try {
         value = static_cast<uint32_t>(std::stoul(std::string(m_data)));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsInt32() const -> int32_t {
+auto Value::AsInt32() const -> int32_t
+{
     int32_t value = 0;
-    try
-    {
+    try {
         value = std::stoi(std::string(m_data));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsUInt16() const -> uint16_t {
+auto Value::AsUInt16() const -> uint16_t
+{
     uint16_t value = 0;
-    try
-    {
+    try {
         value = static_cast<uint16_t>(std::stoul(std::string(m_data)));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsInt16() const -> int16_t {
+auto Value::AsInt16() const -> int16_t
+{
     int16_t value = 0;
-    try
-    {
+    try {
         value = static_cast<int16_t>(std::stoi(std::string(m_data)));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsUInt8() const -> uint8_t {
+auto Value::AsUInt8() const -> uint8_t
+{
     uint8_t value = 0;
-    try
-    {
+    try {
         value = static_cast<uint8_t>(std::stoul(std::string(m_data)));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsInt8() const -> int8_t {
+auto Value::AsInt8() const -> int8_t
+{
     int8_t value = 0;
-    try
-    {
+    try {
         value = static_cast<int8_t>(std::stoi(std::string(m_data)));
+    } catch (...) {
     }
-    catch(...) { }
     return value;
 }
 
-auto Value::AsBool() const -> bool {
-    try
-    {
+auto Value::AsBool() const -> bool
+{
+    try {
         int64_t value = std::stol(std::string(m_data));
         return (value != 0);
+    } catch (...) {
     }
-    catch(...) { }
 
     return false;
 }
 
-auto Value::AsFloat() const -> float {
+auto Value::AsFloat() const -> float
+{
     float value = 0;
-    try
-    {
+    try {
         value = std::stof(std::string(m_data));
-    } catch(...) { }
+    } catch (...) {
+    }
     return value;
 }
 
-auto Value::AsDouble() const -> double {
+auto Value::AsDouble() const -> double
+{
     double value = 0;
-    try
-    {
+    try {
         value = std::stod(std::string(m_data));
-    } catch(...) { }
+    } catch (...) {
+    }
     return value;
 }
 

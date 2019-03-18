@@ -1,25 +1,20 @@
 #include "wing/QueryPool.h"
 #include "wing/EventLoop.h"
 
-namespace wing
-{
+namespace wing {
 
 QueryPool::QueryPool(
-    ConnectionInfo connection
-)
-    :   m_connection(std::move(connection))
+    ConnectionInfo connection)
+    : m_connection(std::move(connection))
 {
-
 }
 
 QueryPool::QueryPool(
     ConnectionInfo connection,
-    EventLoop* event_loop
-)
-    :   m_connection(std::move(connection)),
-        m_event_loop(event_loop)
+    EventLoop* event_loop)
+    : m_connection(std::move(connection))
+    , m_event_loop(event_loop)
 {
-
 }
 
 QueryPool::~QueryPool()
@@ -34,20 +29,18 @@ auto QueryPool::GetConnection() const -> const ConnectionInfo&
 
 auto QueryPool::Produce(
     Statement statement,
-    std::chrono::milliseconds timeout
-) -> QueryHandle {
+    std::chrono::milliseconds timeout) -> QueryHandle
+{
     return Produce(std::move(statement), timeout, nullptr);
 }
 
 auto QueryPool::Produce(
     Statement statement,
     std::chrono::milliseconds timeout,
-    std::function<void(QueryHandle)> on_complete
-) -> QueryHandle
+    std::function<void(QueryHandle)> on_complete) -> QueryHandle
 {
     m_lock.lock();
-    if(m_queries.empty())
-    {
+    if (m_queries.empty()) {
         m_lock.unlock();
         return QueryHandle(
             // Calling new instead of std::make_unique since the ctor is private
@@ -58,13 +51,8 @@ auto QueryPool::Produce(
                     m_connection,
                     std::move(on_complete),
                     timeout,
-                    std::move(statement)
-                )
-            )
-        );
-    }
-    else
-    {
+                    std::move(statement))));
+    } else {
         auto request_handle_ptr = std::move(m_queries.back());
         m_queries.pop_back();
         m_lock.unlock();
@@ -78,15 +66,13 @@ auto QueryPool::Produce(
 }
 
 auto QueryPool::returnQuery(
-    std::unique_ptr<Query> query_handle
-) -> void
+    std::unique_ptr<Query> query_handle) -> void
 {
     // If the handle has had any kind of error while processing
     // simply release the memory and close it.
     // libuv will shutdown the poll/timer handles
     // and then delete the request handle.
-    if(query_handle->HasError())
-    {
+    if (query_handle->HasError()) {
         return;
     }
 

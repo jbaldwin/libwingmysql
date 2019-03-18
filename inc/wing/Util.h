@@ -1,11 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <sstream>
 #include <string_view>
+#include <vector>
 
-namespace wing
-{
+namespace wing {
 
 /**
  * gets a thread local stream
@@ -26,8 +25,7 @@ auto get_thread_local_stream() -> std::stringstream&;
  */
 auto split_view(
     std::string_view s,
-    char delim
-) -> std::vector<std::string_view>;
+    char delim) -> std::vector<std::string_view>;
 
 /**
  * Splits a string view by the delimiter.
@@ -37,7 +35,6 @@ auto split_view(
  */
 auto split_view(
     std::string_view s,
-    std::string_view delim
-) -> std::vector<std::string_view>;
+    std::string_view delim) -> std::vector<std::string_view>;
 
 } // wing

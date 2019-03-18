@@ -1,9 +1,9 @@
 #include "wing/Util.h"
 
-namespace wing
-{
+namespace wing {
 
-auto get_thread_local_stream() -> std::stringstream& {
+auto get_thread_local_stream() -> std::stringstream&
+{
     thread_local std::stringstream t_stream;
 
     t_stream.clear();
@@ -14,26 +14,25 @@ auto get_thread_local_stream() -> std::stringstream& {
 
 auto split_view(
     const std::string_view s,
-    char delim
-) -> std::vector<std::string_view>
+    char delim) -> std::vector<std::string_view>
 {
-    return split_view(s, std::string_view{&delim, 1});
+    return split_view(s, std::string_view { &delim, 1 });
 }
 
 auto split_view(
     const std::string_view s,
-    const std::string_view delim
-) -> std::vector<std::string_view> {
+    const std::string_view delim) -> std::vector<std::string_view>
+{
 
     std::vector<std::string_view> output;
 
     size_t length;
     size_t start = 0;
 
-    while(true) {
+    while (true) {
 
         size_t next = s.find(delim, start);
-        if(next == s.npos) {
+        if (next == s.npos) {
             // The length of this split is the full string length - start.
             // This is also true if there were no delimiters found at all.
             length = s.length() - start;

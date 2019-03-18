@@ -3,17 +3,16 @@
 #include <string>
 #include <vector>
 
-namespace wing
-{
+namespace wing {
 
 /**
  * This object encapsulates a statement to be used for a query,
  * and can be created from a raw string or be used to create
  * a prepared statement by binding parameters.
  */
-class Statement
-{
+class Statement {
     friend class Query;
+
 public:
     /**
      * Arg structure, which can be constructed and streamed into a Statement to provide
@@ -31,8 +30,7 @@ public:
          */
         template <typename T>
         Arg(
-            const T& parameter_value
-        );
+            const T& parameter_value);
 
         std::string m_string_value;
         bool m_requires_escaping;
@@ -43,8 +41,8 @@ public:
 
     Statement(const Statement&) = default;
     Statement(Statement&&) = default;
-    auto operator = (const Statement&) -> Statement& = default;
-    auto operator = (Statement&&) -> Statement& = default;
+    auto operator=(const Statement&) -> Statement& = default;
+    auto operator=(Statement &&) -> Statement& = default;
 
     /**
      * Stream operator to accept raw query parts - these pieces are never escaped!
@@ -56,9 +54,8 @@ public:
      * @return A reference to this Statement.
      */
     template <typename T>
-    auto operator << (
-        const T& statement_part
-    ) -> Statement&;
+    auto operator<<(
+        const T& statement_part) -> Statement&;
 
     /**
      * Stream operator to accept arguments - these will be automatically escaped
@@ -69,9 +66,9 @@ public:
      * @param parameter The argument ot append to the statement.
      * @return A reference to this statement.
      */
-    auto operator << (
-        Arg parameter
-    ) -> Statement&;
+    auto operator<<(
+        Arg parameter) -> Statement&;
+
 private:
     /**
      * Internal struct, similar to Arg but does not perform conversion and does
@@ -83,8 +80,7 @@ private:
     struct StatementPart {
         StatementPart(
             std::string value,
-            bool requires_escaping
-        );
+            bool requires_escaping);
 
         std::string m_string_value;
         bool m_requires_escaping;
@@ -103,8 +99,7 @@ private:
      */
     template <typename EscapeFunctor>
     auto prepareStatement(
-        EscapeFunctor escape_functor
-    ) -> std::string;
+        EscapeFunctor escape_functor) -> std::string;
 };
 
 } // wing

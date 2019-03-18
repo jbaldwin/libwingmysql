@@ -2,20 +2,19 @@
 
 #include <string_view>
 
-namespace wing
-{
+namespace wing {
 
 class Row;
 
-class Value
-{
+class Value {
     friend Row;
+
 public:
     ~Value() = default;
     Value(const Value&) = default;
     Value(Value&&) = default;
-    auto operator = (const Value&) -> Value& = default;
-    auto operator = (Value&&) -> Value& = default;
+    auto operator=(const Value&) -> Value& = default;
+    auto operator=(Value &&) -> Value& = default;
 
     /**
      * Transforms the result value into the specified type.
@@ -45,8 +44,7 @@ public:
 
 private:
     explicit Value(
-        std::string_view data
-    );
+        std::string_view data);
 
     std::string_view m_data;
 };

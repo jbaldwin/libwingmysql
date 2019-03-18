@@ -2,11 +2,9 @@
 
 #include <string>
 
-namespace wing
-{
+namespace wing {
 
-class ConnectionInfo
-{
+class ConnectionInfo {
 public:
     /**
      * Creates connection information for which MySQL server to connect to.
@@ -23,8 +21,7 @@ public:
         std::string user,
         std::string password,
         std::string database = "",
-        uint64_t client_flags = 0
-    );
+        uint64_t client_flags = 0);
 
     /**
      * Creates connection information for which MySQL server to connect to.
@@ -39,8 +36,7 @@ public:
         std::string user,
         std::string password,
         std::string database = "",
-        uint64_t client_flags = 0
-    );
+        uint64_t client_flags = 0);
 
     /**
      * @return The MySQL server hostname.
@@ -79,12 +75,12 @@ public:
 
 private:
     std::string m_host;
-    uint16_t    m_port;
+    uint16_t m_port;
     std::string m_socket;
     std::string m_user;
     std::string m_password;
     std::string m_database;
-    uint64_t    m_client_flags;
+    uint64_t m_client_flags;
 };
 
 } // wing

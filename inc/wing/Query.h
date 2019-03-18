@@ -1,38 +1,37 @@
 #pragma once
 
+#include "wing/ConnectionInfo.h"
 #include "wing/QueryStatus.h"
 #include "wing/Row.h"
-#include "wing/ConnectionInfo.h"
 #include "wing/Statement.h"
 
-#include <string>
-#include <memory>
 #include <chrono>
-#include <sstream>
 #include <functional>
+#include <memory>
+#include <sstream>
+#include <string>
 
-#include <uv.h>
 #include <mysql/mysql.h>
+#include <uv.h>
 
-namespace wing
-{
+namespace wing {
 
 class EventLoop;
 class QueryPool;
 class QueryHandle;
 
-class Query
-{
+class Query {
     friend EventLoop;
     friend QueryPool;
     friend QueryHandle;
+
 public:
     ~Query();
 
     Query(const Query&) = delete;
     Query(Query&&) = delete;
-    auto operator = (const Query&) = delete;
-    auto operator = (Query&&) -> Query& = delete;
+    auto operator=(const Query&) = delete;
+    auto operator=(Query &&) -> Query& = delete;
 
     /**
      * Resets QueryHandle, freeing results and clearing m_query_parts and m_bind_params
@@ -43,8 +42,7 @@ public:
      * @param on_complete The on complete function handle for this query.
      */
     auto SetOnCompleteHandler(
-        std::function<void(QueryHandle)> on_complete
-    ) -> void;
+        std::function<void(QueryHandle)> on_complete) -> void;
 
     /**
      * @return Gets the query status after a completed query.
@@ -55,8 +53,7 @@ public:
      * @param timeout The timeout for this query in milliseconds.
      */
     auto SetTimeout(
-        std::chrono::milliseconds timeout
-    ) -> void;
+        std::chrono::milliseconds timeout) -> void;
 
     /**
      * @return The timeout for this query in milliseconds.
@@ -70,8 +67,7 @@ public:
      * @param statement the statement set for this query
      */
     auto SetStatement(
-        Statement statement
-    ) -> void;
+        Statement statement) -> void;
 
     /**
      * @return the original query that was executed
@@ -117,8 +113,7 @@ public:
      * @return The row.
      */
     auto GetRow(
-        size_t idx
-    ) const -> const Row&;
+        size_t idx) const -> const Row&;
 
 private:
     Query(
@@ -127,8 +122,7 @@ private:
         const ConnectionInfo& connection,
         std::function<void(QueryHandle)> on_complete,
         std::chrono::milliseconds timeout,
-        Statement statement
-    );
+        Statement statement);
 
     /**
      * If the handle has not yet connected, this will block and connect.
@@ -162,35 +156,33 @@ private:
     /// The timeout in milliseconds.
     std::chrono::milliseconds m_timeout;
     MYSQL m_mysql;
-    MYSQL_RES* m_result{nullptr};
+    MYSQL_RES* m_result { nullptr };
     /// True if the result has already been parsed (to avoid doing it multiple times).
-    bool m_parsed_result{false};
+    bool m_parsed_result { false };
     /// The number of fields returned from the query.
-    size_t m_field_count{0};
+    size_t m_field_count { 0 };
     /// The number of rows returned from the query.
-    size_t m_row_count{0};
+    size_t m_row_count { 0 };
     /// User facing rows view.
     std::vector<Row> m_rows;
     /// Has this MySQL client connected to the server yet?
-    bool m_is_connected{false};
+    bool m_is_connected { false };
     /// Has this MySQL client had an error?
-    bool m_had_error{false};
+    bool m_had_error { false };
 
     /// The status of the last query.
-    QueryStatus m_query_status{QueryStatus::BUILDING};
+    QueryStatus m_query_status { QueryStatus::BUILDING };
     /// The SQL statement for this query
     Statement m_statement;
     /// The SQL statement that was last executed
     std::string m_final_statement;
 
     friend auto on_uv_query_execute_callback(
-        uv_work_t* req
-    ) -> void;
+        uv_work_t* req) -> void;
 
     friend auto on_complete_uv_query_execute_callback(
         uv_work_t* req,
-        int status
-    ) -> void;
+        int status) -> void;
 };
 
 } // wing

@@ -1,24 +1,23 @@
 #pragma once
 
-#include "wing/QueryHandle.h"
-#include "wing/Query.h"
 #include "wing/ConnectionInfo.h"
+#include "wing/Query.h"
+#include "wing/QueryHandle.h"
 
-#include <deque>
-#include <mutex>
-#include <memory>
 #include <chrono>
+#include <deque>
 #include <functional>
+#include <memory>
+#include <mutex>
 
-namespace wing
-{
+namespace wing {
 
 class EventLoop;
 
-class QueryPool
-{
+class QueryPool {
     friend EventLoop;
     friend QueryHandle;
+
 public:
     ~QueryPool();
 
@@ -32,8 +31,8 @@ public:
 
     QueryPool(const QueryPool&) = delete;
     QueryPool(QueryPool&&) = delete;
-    auto operator = (const QueryPool&) -> QueryPool& = delete;
-    auto operator = (QueryPool&&) -> QueryPool& = delete;
+    auto operator=(const QueryPool&) -> QueryPool& = delete;
+    auto operator=(QueryPool &&) -> QueryPool& = delete;
 
     /**
      * @return The MySQL Server connection information for this pool.
@@ -48,8 +47,7 @@ public:
      */
     auto Produce(
         Statement statement,
-        std::chrono::milliseconds timeout
-    ) -> QueryHandle;
+        std::chrono::milliseconds timeout) -> QueryHandle;
 
     /**
      * Produces a Query from the pool with the provided query, timeout and on complete callback.
@@ -61,22 +59,20 @@ public:
     auto Produce(
         Statement statement,
         std::chrono::milliseconds timeout,
-        std::function<void(QueryHandle)> on_complete
-    ) -> QueryHandle;
+        std::function<void(QueryHandle)> on_complete) -> QueryHandle;
+
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
-    EventLoop* m_event_loop{nullptr};
+    EventLoop* m_event_loop { nullptr };
     std::deque<std::unique_ptr<Query>> m_queries;
 
     explicit QueryPool(
         ConnectionInfo connection,
-        EventLoop* event_loop
-    );
+        EventLoop* event_loop);
 
     auto returnQuery(
-        std::unique_ptr<Query> query_handle
-    ) -> void;
+        std::unique_ptr<Query> query_handle) -> void;
 
     auto close() -> void;
 };

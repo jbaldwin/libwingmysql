@@ -6,20 +6,19 @@
 
 #include <mysql/mysql.h>
 
-namespace wing
-{
+namespace wing {
 
 class Query;
 
-class Row
-{
+class Row {
     friend Query;
+
 public:
     ~Row() = default;
     Row(const Row&) = delete;
     Row(Row&&) = default;
-    auto operator = (const Row&) -> Row& = delete;
-    auto operator = (Row&&) -> Row& = default;
+    auto operator=(const Row&) -> Row& = delete;
+    auto operator=(Row &&) -> Row& = default;
 
     /**
      * @return The number of values/columns in this row.
@@ -31,15 +30,13 @@ public:
      * @return The specified value at idx.
      */
     auto GetColumn(
-        size_t idx
-    ) const -> const Value&;
+        size_t idx) const -> const Value&;
 
 private:
     Row(
         MYSQL_ROW mysql_row,
         size_t field_count,
-        unsigned long* lengths
-    );
+        unsigned long* lengths);
 
     std::vector<Value> m_values;
     size_t m_column_count;

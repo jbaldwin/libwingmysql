@@ -2,13 +2,12 @@
 
 #include "wing/ConnectionInfo.h"
 #include "wing/EventLoop.h"
-#include "wing/QueryHandle.h"
 #include "wing/Query.h"
+#include "wing/QueryHandle.h"
 #include "wing/QueryPool.h"
 #include "wing/QueryStatus.h"
 
-namespace wing
-{
+namespace wing {
 
 /**
  * Starts up libwingmysql.  This must be called

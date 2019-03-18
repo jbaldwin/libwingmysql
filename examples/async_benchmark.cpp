@@ -1,10 +1,10 @@
-#include <iostream>
 #include <atomic>
+#include <iostream>
 
 #include <wing/WingMySQL.h>
 
-static std::atomic<uint64_t> count{0};
-static std::atomic<uint64_t> errors{0};
+static std::atomic<uint64_t> count { 0 };
+static std::atomic<uint64_t> errors { 0 };
 
 static std::chrono::seconds duration;
 static size_t connections;
@@ -22,16 +22,14 @@ static auto print_stats(
     uint64_t duration_s,
     uint64_t threads,
     uint64_t total_success,
-    uint64_t total_error
-) -> void
+    uint64_t total_error) -> void
 {
     auto total = total_success + total_error;
     std::cout << "  Thread Stats    Avg\n";
     std::cout << "    Req/sec     " << (total / static_cast<double>(threads) / duration_s) << "\n";
 
     std::cout << "  " << total << " requests in " << duration_s << "s\n";
-    if(total_error > 0)
-    {
+    if (total_error > 0) {
         std::cout << "  " << total_error << " errors\n";
     }
     std::cout << "Requests/sec: " << (total / static_cast<double>(duration_s)) << "\n";
@@ -40,18 +38,14 @@ static auto print_stats(
 static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) -> void
 {
     ++count;
-    if(request->HasError())
-    {
+    if (request->HasError()) {
         ++errors;
         std::cout << "ERROR: " << wing::to_string(request->GetQueryStatus()) << " " << request->GetError() << "\n";
     }
 
-    if(request->GetQueryStatus() == wing::QueryStatus::SUCCESS)
-    {
+    if (request->GetQueryStatus() == wing::QueryStatus::SUCCESS) {
         event_loop.StartQuery(std::move(request));
-    }
-    else
-    {
+    } else {
         auto& request_pool = event_loop.GetQueryPool();
         auto callback = std::bind(on_complete, _1, std::ref(event_loop));
         request = request_pool.Produce(mysql_statement, 1000ms, callback);
@@ -61,8 +55,7 @@ static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) 
 
 int main(int argc, char* argv[])
 {
-    if(argc < 9)
-    {
+    if (argc < 9) {
         std::cout << argv[0] << " <duration_seconds> <connections> <hostname> <port> <user> <password> <db> <query>\n";
         return 1;
     }
@@ -82,7 +75,7 @@ int main(int argc, char* argv[])
     wing::EventLoop event_loop(connection);
     auto& request_pool = event_loop.GetQueryPool();
 
-    for(size_t i = 0; i < connections; ++i) {
+    for (size_t i = 0; i < connections; ++i) {
         auto callback = std::bind(on_complete, _1, std::ref(event_loop));
         auto request = request_pool.Produce(mysql_statement, 1000ms, std::move(callback));
         event_loop.StartQuery(std::move(request));

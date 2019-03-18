@@ -2,11 +2,9 @@
 
 #include <string>
 
-namespace wing
-{
+namespace wing {
 
-enum class QueryStatus
-{
+enum class QueryStatus {
     /// The query is currently being built.
     BUILDING,
     /// The query is currently executing.
@@ -35,7 +33,6 @@ enum class QueryStatus
  * @return string
  */
 auto to_string(
-    QueryStatus status
-) -> const std::string&;
+    QueryStatus status) -> const std::string&;
 
 } // wing

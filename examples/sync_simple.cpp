@@ -5,38 +5,29 @@
 static auto run_query(wing::QueryHandle& query) -> void
 {
     auto status = query->Execute();
-    if(status == wing::QueryStatus::SUCCESS)
-    {
+    if (status == wing::QueryStatus::SUCCESS) {
         std::cout << "Fields count: " << query->GetFieldCount() << "\n";
         std::cout << "Row count: " << query->GetRowCount() << "\n";
-        for(size_t row_idx = 0; row_idx < query->GetRowCount(); ++row_idx)
-        {
+        for (size_t row_idx = 0; row_idx < query->GetRowCount(); ++row_idx) {
             auto& row = query->GetRow(row_idx);
-            for(size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx)
-            {
+            for (size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx) {
                 auto& value = row.GetColumn(col_idx);
-                if(value.IsNull())
-                {
+                if (value.IsNull()) {
                     std::cout << "NULL ";
-                }
-                else
-                {
+                } else {
                     std::cout << value.AsStringView() << " ";
                 }
             }
             std::cout << "\n";
         }
-    }
-    else
-    {
+    } else {
         std::cout << "An error occurred: " << wing::to_string(status) << "\n";
     }
 }
 
 int main(int argc, char* argv[])
 {
-    if(argc < 7)
-    {
+    if (argc < 7) {
         std::cout << argv[0] << " <hostname> <port> <user> <password> <db> <query>\n";
         return 1;
     }
