@@ -10,34 +10,34 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/bin)
 set(SYNCH_SIMPLE_SOURCE_FILES
     examples/sync_simple.cpp
 )
-add_executable(sync_simple ${SYNCH_SIMPLE_SOURCE_FILES})
-target_include_directories(sync_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
-target_link_libraries(sync_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
-target_compile_features(sync_simple PRIVATE cxx_std_17)
+add_executable(wing_sync_simple ${SYNCH_SIMPLE_SOURCE_FILES})
+target_include_directories(wing_sync_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
+target_link_libraries(wing_sync_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(wing_sync_simple PRIVATE cxx_std_17)
 
 ### async_simple ###
 set(ASYNC_SIMPLE_SOURCE_FILES
     examples/async_simple.cpp
 )
-add_executable(async_simple ${ASYNC_SIMPLE_SOURCE_FILES})
-target_include_directories(async_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
-target_link_libraries(async_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
-target_compile_features(async_simple PRIVATE cxx_std_17)
+add_executable(wing_async_simple ${ASYNC_SIMPLE_SOURCE_FILES})
+target_include_directories(wing_async_simple SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
+target_link_libraries(wing_async_simple PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(wing_async_simple PRIVATE cxx_std_17)
 
 ### async_benchmarket ###
 set(ASYNC_BENCHMARKET_SOURCE_FILES
     examples/async_benchmark.cpp
 )
-add_executable(async_benchmark ${ASYNC_BENCHMARKET_SOURCE_FILES})
-target_include_directories(async_benchmark SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
-target_link_libraries(async_benchmark PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
-target_compile_features(async_benchmark PRIVATE cxx_std_17)
+add_executable(wing_async_benchmark ${ASYNC_BENCHMARKET_SOURCE_FILES})
+target_include_directories(wing_async_benchmark SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
+target_link_libraries(wing_async_benchmark PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(wing_async_benchmark PRIVATE cxx_std_17)
 
 ### bind ###
 set(BIND_SOURCE_FILES
     examples/bind.cpp
 )
-add_executable(bind ${BIND_SOURCE_FILES})
-target_include_directories(bind SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
-target_link_libraries(bind PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
-target_compile_features(bind PRIVATE cxx_std_17)
+add_executable(wing_bind ${BIND_SOURCE_FILES})
+target_include_directories(wing_bind SYSTEM PUBLIC ${WING_MYSQL_INCLUDE})
+target_link_libraries(wing_bind PRIVATE wingmysql ${WING_MYSQL_LIBRARY_DEPENDENCIES} ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
+target_compile_features(wing_bind PRIVATE cxx_std_17)
