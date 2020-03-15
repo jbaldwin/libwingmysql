@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(wingmysql CXX)
 
-# Create a Debug/lib or Release/lib output directory.
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_BUILD_TYPE}/lib)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WING_PERCONA_SSL_DISABLED "Disable Percona MySQL SSL" OFF)
@@ -60,55 +57,17 @@ set(LIB_WING_MYSQL_SOURCE_FILES
     inc/wing/WingMySQL.h src/WingMySQL.cpp
 )
 
+##### Export the Library target #####
+
 add_library(${PROJECT_NAME} STATIC ${LIB_WING_MYSQL_SOURCE_FILES})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${WING_MYSQL_INCLUDE})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${WING_MYSQL_LIBRARY_DEPENDENCIES}
-    ${WING_SYSTEM_LIBRARY_DEPENDENCIES}
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${WING_MYSQL_LIBRARY_DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC  ${WING_SYSTEM_LIBRARY_DEPENDENCIES})
 
-if(UNIX)
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE
-            -Wall
-            -Wextra
-            -Weffc++
-            -Werror
-            -Wpedantic
-            -pedantic-errors
-            -MD
-    )
-endif()
-
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE
-            -Wno-unknown-pragmas
-    )
-endif()
-
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    target_compile_options(
-        ${PROJECT_NAME} PRIVATE
-            -Weverything
-            -Wno-c++98-compat
-            -Wno-c++98-compat-pedantic
-            -Wno-padded
-            -Wno-weak-vtables
-            -Wno-gnu-anonymous-struct
-            -Wno-nested-anon-types
-            -Wno-exit-time-destructors
-            -Wno-global-constructors
-            -Wno-error=deprecated-declarations
-            -Wno-disabled-macro-expansion
-            -Wno-covered-switch-default
-            -fcolor-diagnostics
-            -ferror-limit=128
-    )
-endif()
-
-include(examples/CMakeLists.txt)
+add_subdirectory(examples)
+enable_testing()
+add_subdirectory(test)
