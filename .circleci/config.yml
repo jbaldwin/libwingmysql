@@ -1,0 +1,168 @@
+version: 2
+jobs:
+    build-ubuntu:
+        docker:
+            - image: ubuntu:rolling
+            - image: circleci/mysql:latest
+              environment:
+                MYSQL_ROOT_PASSWORD: rootpw
+                MYSQL_DATABASE: test_db
+                MYSQL_USER: user
+                MYSQL_PASSWORD: passw0rd
+
+        steps:
+            - run:
+                name: update
+                command: apt-get -y update
+            - run:
+                name: install dependencies
+                command: |
+                    apt-get -y install \
+                        git \
+                        cmake \
+                        ninja-build \
+                        g++ \
+                        clang \
+                        zlib1g-dev \
+                        libuv1-dev \
+                        libssl-dev \
+                        libmysqlclient-dev \
+                        netcat
+            - checkout
+            - run:
+                name: git init submodules
+                command: |
+                    git submodule update --init --recursive
+            - run:
+                name: build release g++
+                command: |
+                    mkdir build-release-g++
+                    cd build-release-g++
+                    cmake \
+                        -GNinja \
+                        -DMYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
+                        -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_C_COMPILER=gcc \
+                        -DCMAKE_CXX_COMPILER=g++ \
+                        ..
+                    ninja
+            - run:
+                name: build release clang++
+                command: |
+                    mkdir build-release-clang++
+                    cd build-release-clang++
+                    cmake \
+                        -GNinja \
+                        -DMYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
+                        -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_C_COMPILER=clang \
+                        -DCMAKE_CXX_COMPILER=clang++ \
+                        ..
+                    ninja
+            - run:
+                name: wait for mysql to start
+                command: |
+                    for i in `seq 1 30`;
+                    do
+                        nc -z localhost 3306 && echo "Connected to MySQL." && exit 0
+                        echo -n
+                        sleep 1
+                    done
+                    echo Failed waiting for MySQL && exit 1
+            - run:
+                name: test release g++
+                command: |
+                    cd build-release-g++
+                    ctest -V
+            - run:
+                name: test release clang++
+                command: |
+                    cd build-release-clang++
+                    ctest -V
+
+    build-fedora:
+        docker:
+            - image: fedora:latest
+            - image: circleci/mysql:latest
+              environment:
+                MYSQL_ROOT_PASSWORD: rootpw
+                MYSQL_DATABASE: test_db
+                MYSQL_USER: user
+                MYSQL_PASSWORD: passw0rd
+        steps:
+            - run:
+                name: update
+                command: dnf update -y
+            - run:
+                name: install dependencies
+                command: |
+                    dnf install -y \
+                        git \
+                        cmake \
+                        ninja-build \
+                        g++ \
+                        clang \
+                        zlib-devel \
+                        libuv-devel \
+                        openssl-devel \
+                        mysql-devel \
+                        nc
+            - checkout
+            - run:
+                name: git init submodules
+                command: |
+                    git submodule update --init --recursive
+            - run:
+                name: build release g++
+                command: |
+                    mkdir build-release-g++
+                    cd build-release-g++
+                    cmake \
+                        -GNinja \
+                        -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_C_COMPILER=gcc \
+                        -DCMAKE_CXX_COMPILER=g++ \
+                        ..
+                    ninja
+            - run:
+                name: build release clang++
+                command: |
+                    mkdir build-release-clang++
+                    cd build-release-clang++
+                    cmake \
+                        -GNinja \
+                        -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_C_COMPILER=clang \
+                        -DCMAKE_CXX_COMPILER=clang++ \
+                        ..
+                    ninja
+            - run:
+                name: wait for mysql to start
+                command: |
+                    for i in `seq 1 30`;
+                    do
+                        nc -z localhost 3306 && echo "Connected to MySQL." && exit 0
+                        echo -n
+                        sleep 1
+                    done
+                    echo Failed waiting for MySQL && exit 1
+            - run:
+                name: test release g++
+                command: |
+                    cd build-release-g++
+                    ctest -V
+            - run:
+                name: test release clang++
+                command: |
+                    cd build-release-clang++
+                    ctest -V
+
+workflows:
+    version: 2
+    build-test:
+        jobs:
+        - build-ubuntu
+        # the OSS/free tier can't handle them all at once
+        - build-fedora:
+            requires:
+                - build-ubuntu

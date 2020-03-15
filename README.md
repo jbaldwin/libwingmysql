@@ -1,7 +1,15 @@
-libwingmysql - Fast asynchronous C++17 MySQL client.
-====================================================
+libwingmysql - Safe Easy to use C++17 MySQL Client Library
+==========================================================
 
-Copyright (c) 2017, Josh Baldwin
+[![CircleCI](https://circleci.com/gh/jbaldwin/libwingmysql/tree/master.svg?style=svg)](https://circleci.com/gh/jbaldwin/libwingmysql/tree/master)
+[![language][badge.language]][language]
+[![license][badge.license]][license]
+
+[badge.language]: https://img.shields.io/badge/language-C%2B%2B17-yellow.svg
+[badge.license]: https://img.shields.io/badge/license-Apache--2.0-blue
+
+[language]: https://en.wikipedia.org/wiki/C%2B%2B17
+[license]: https://en.wikipedia.org/wiki/Apache_License
 
 https://github.com/jbaldwin/libwingmysql
 
@@ -76,3 +84,8 @@ See all of the examples under the examples/ directory.
 
 See examples/async_simple.cpp
 
+## Support
+
+File bug reports, feature requests and questions using [GitHub Issues](https://github.com/jbaldwin/libwingmysql/issues)
+
+Copyright © 2017-2020, Josh Baldwin
