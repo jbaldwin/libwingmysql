@@ -92,7 +92,7 @@ public:
     /**
      * @return If no error then empty optional, otherwise the MySQL client error message.
      */
-    auto Error() -> std::optional<std::string>;
+    auto Error() const -> std::optional<std::string>;
 
     /**
      * @return The number of fields returned from the query.
@@ -151,7 +151,7 @@ private:
 
     /// The timeout in milliseconds.
     std::chrono::milliseconds m_timeout;
-    MYSQL m_mysql;
+    mutable MYSQL m_mysql;
     MYSQL_RES* m_result{ nullptr };
     /// True if the result has already been parsed (to avoid doing it multiple times).
     bool m_parsed_result{ false };

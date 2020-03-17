@@ -3,7 +3,7 @@
 
 #include <wing/WingMySQL.hpp>
 
-wing::GlobalScopeInitializer wing_gsi{};
+static wing::GlobalScopeInitializer g_wing_gsi{};
 
 TEST_CASE("catch_is_working")
 {
