@@ -1,4 +1,4 @@
-#include "wing/Util.h"
+#include "wing/Util.hpp"
 
 namespace wing {
 
@@ -16,7 +16,7 @@ auto split_view(
     const std::string_view s,
     char delim) -> std::vector<std::string_view>
 {
-    return split_view(s, std::string_view { &delim, 1 });
+    return split_view(s, std::string_view{ &delim, 1 });
 }
 
 auto split_view(

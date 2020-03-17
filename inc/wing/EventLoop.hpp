@@ -1,7 +1,7 @@
 #pragma once
 
-#include "wing/ConnectionInfo.h"
-#include "wing/QueryPool.h"
+#include "wing/ConnectionInfo.hpp"
+#include "wing/QueryPool.hpp"
 
 #include <atomic>
 #include <memory>
@@ -27,8 +27,8 @@ public:
 
     EventLoop(const EventLoop& copy) = delete;
     EventLoop(EventLoop&& move) = delete;
-    auto operator=(const EventLoop& copy_assign) -> EventLoop& = delete;
-    auto operator=(EventLoop&& move_assign) -> EventLoop& = delete;
+    auto operator=(const EventLoop& copy_assign) noexcept -> EventLoop& = delete;
+    auto operator=(EventLoop&& move_assign) noexcept -> EventLoop& = delete;
 
     /**
      * @return True if the query and connect threads are running.
@@ -41,7 +41,7 @@ public:
      * queued to connect.
      * @return Gets an active query count that is being executed.
      */
-    auto GetActiveQueryCount() const -> uint64_t;
+    auto ActiveQueryCount() const -> uint64_t { return m_active_query_count; }
 
     /**
      * Stops the event loop and shuts down all current queries.
@@ -51,12 +51,16 @@ public:
     auto Stop() -> void;
 
     /**
-     * All queries run through this event loop will save the
-     * connection to the MySQL server in this pool for future use
-     * reducing the need to re-connect.
-     * @return Gets the QueryPool handle.
+     * Produces a query to set the details on to then be executed.
+     * @param statement The statement to execute.
+     * @param timeout The timeout for this query.
+     * @param on_complete The on complete callback handler.
+     * @return A query handle to set its query details on.
      */
-    auto GetQueryPool() -> QueryPool&;
+    auto ProduceQuery(
+        wing::Statement statement,
+        std::chrono::milliseconds timeout,
+        std::function<void(QueryHandle)> on_complete) -> QueryHandle;
 
     /**
      * Starts an asynchronous query.
@@ -69,14 +73,14 @@ public:
 private:
     QueryPool m_query_pool;
 
-    std::atomic<bool> m_is_query_running { false };
-    std::atomic<bool> m_is_stopping { false };
-    std::atomic<uint64_t> m_active_query_count { 0 };
+    std::atomic<bool> m_is_query_running{ false };
+    std::atomic<bool> m_is_stopping{ false };
+    std::atomic<uint64_t> m_active_query_count{ 0 };
 
     std::thread m_background_query_thread;
-    uv_loop_t* m_query_loop { uv_loop_new() };
+    uv_loop_t* m_query_loop{ uv_loop_new() };
     uv_async_t m_query_async;
-    std::atomic<bool> m_query_async_closed { false };
+    std::atomic<bool> m_query_async_closed{ false };
     std::mutex m_pending_queries_lock;
     std::vector<QueryHandle> m_pending_queries;
     std::vector<QueryHandle> m_grabbed_queries;

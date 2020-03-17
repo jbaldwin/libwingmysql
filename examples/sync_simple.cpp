@@ -1,17 +1,17 @@
 #include <iostream>
 
-#include <wing/WingMySQL.h>
+#include <wing/WingMySQL.hpp>
 
 static auto run_query(wing::QueryHandle& query) -> void
 {
     auto status = query->Execute();
     if (status == wing::QueryStatus::SUCCESS) {
-        std::cout << "Fields count: " << query->GetFieldCount() << "\n";
-        std::cout << "Row count: " << query->GetRowCount() << "\n";
-        for (size_t row_idx = 0; row_idx < query->GetRowCount(); ++row_idx) {
-            auto& row = query->GetRow(row_idx);
-            for (size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx) {
-                auto& value = row.GetColumn(col_idx);
+        std::cout << "Fields count: " << query->FieldCount() << "\n";
+        std::cout << "Row count: " << query->RowCount() << "\n";
+        for (size_t row_idx = 0; row_idx < query->RowCount(); ++row_idx) {
+            auto& row = query->Row(row_idx);
+            for (size_t col_idx = 0; col_idx < row.ColumnCount(); ++col_idx) {
+                auto& value = row.Column(col_idx);
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
@@ -40,13 +40,13 @@ int main(int argc, char* argv[])
     wing::Statement mysql_statement;
     mysql_statement << argv[6];
 
-    wing::startup();
+    wing::GlobalScopeInitializer wing_gsi{};
 
-    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
+    wing::ConnectionInfo connection{ hostname, port, user, password, db, 0 };
 
     using namespace std::chrono_literals;
 
-    wing::QueryPool query_pool(connection);
+    wing::QueryPool query_pool{ connection };
     {
         auto query = query_pool.Produce(mysql_statement, 1000ms);
         run_query(query);
@@ -56,8 +56,6 @@ int main(int argc, char* argv[])
         auto query = query_pool.Produce(mysql_statement, 1000ms);
         run_query(query);
     }
-
-    wing::shutdown();
 
     return 0;
 }

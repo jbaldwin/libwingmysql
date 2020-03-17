@@ -1,4 +1,4 @@
-#include "wing/Value.h"
+#include "wing/Value.hpp"
 
 #include <string>
 

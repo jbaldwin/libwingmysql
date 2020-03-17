@@ -1,8 +1,8 @@
 #pragma once
 
-#include "wing/ConnectionInfo.h"
-#include "wing/Query.h"
-#include "wing/QueryHandle.h"
+#include "wing/ConnectionInfo.hpp"
+#include "wing/Query.hpp"
+#include "wing/QueryHandle.hpp"
 
 #include <chrono>
 #include <deque>
@@ -31,13 +31,13 @@ public:
 
     QueryPool(const QueryPool&) = delete;
     QueryPool(QueryPool&&) = delete;
-    auto operator=(const QueryPool&) -> QueryPool& = delete;
-    auto operator=(QueryPool &&) -> QueryPool& = delete;
+    auto operator=(const QueryPool&) noexcept -> QueryPool& = delete;
+    auto operator=(QueryPool&&) noexcept -> QueryPool& = delete;
 
     /**
      * @return The MySQL Server connection information for this pool.
      */
-    auto GetConnection() const -> const ConnectionInfo&;
+    auto Connection() const -> const ConnectionInfo& { return m_connection; }
 
     /**
      * Produces a Query from the pool with the provided query and timeout.
@@ -64,7 +64,7 @@ public:
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
-    EventLoop* m_event_loop { nullptr };
+    EventLoop* m_event_loop{ nullptr };
     std::deque<std::unique_ptr<Query>> m_queries;
 
     explicit QueryPool(
@@ -72,7 +72,7 @@ private:
         EventLoop* event_loop);
 
     auto returnQuery(
-        std::unique_ptr<Query> query_handle) -> void;
+        std::unique_ptr<Query> query_handle_ptr) -> void;
 
     auto close() -> void;
 };

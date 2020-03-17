@@ -1,20 +1,20 @@
 #include <iostream>
 
-#include <wing/WingMySQL.h>
+#include <wing/WingMySQL.hpp>
 
 static auto on_complete(wing::QueryHandle request) -> void
 {
-    std::cout << "Finished query: " << request->GetQueryOriginal() << std::endl;
-    std::cout << wing::to_string(request->GetQueryStatus()) << "\n";
-    if (request->HasError()) {
-        std::cout << "Error: " << request->GetError() << "\n";
+    std::cout << "Finished query: " << request->QueryOriginal() << std::endl;
+    std::cout << wing::to_string(request->QueryStatus()) << "\n";
+    if (request->Error().has_value()) {
+        std::cout << "Error: " << request->Error().value() << "\n";
     } else {
-        std::cout << "Fields count: " << request->GetFieldCount() << "\n";
-        std::cout << "Row count: " << request->GetRowCount() << "\n";
-        for (size_t row_idx = 0; row_idx < request->GetRowCount(); ++row_idx) {
-            auto& row = request->GetRow(row_idx);
-            for (size_t col_idx = 0; col_idx < row.GetColumnCount(); ++col_idx) {
-                auto& value = row.GetColumn(col_idx);
+        std::cout << "Fields count: " << request->FieldCount() << "\n";
+        std::cout << "Row count: " << request->RowCount() << "\n";
+        for (size_t row_idx = 0; row_idx < request->RowCount(); ++row_idx) {
+            auto& row = request->Row(row_idx);
+            for (size_t col_idx = 0; col_idx < row.ColumnCount(); ++col_idx) {
+                auto& value = row.Column(col_idx);
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
@@ -41,31 +41,28 @@ int main(int argc, char* argv[])
     wing::Statement mysql_statement;
     mysql_statement << argv[6];
 
-    wing::startup();
+    wing::GlobalScopeInitializer wing_gsi{};
 
     wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
     wing::EventLoop event_loop(connection);
 
     using namespace std::chrono_literals;
-    auto& request_pool = event_loop.GetQueryPool();
-    auto request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
+    auto request = event_loop.ProduceQuery(mysql_statement, 1000ms, on_complete);
     event_loop.StartQuery(std::move(request));
 
     std::this_thread::sleep_for(250ms);
-    while (event_loop.GetActiveQueryCount() > 0) {
+    while (event_loop.ActiveQueryCount() > 0) {
         std::this_thread::sleep_for(100ms);
     }
 
-    request = request_pool.Produce(mysql_statement, 1000ms, on_complete);
+    request = event_loop.ProduceQuery(mysql_statement, 1000ms, on_complete);
     event_loop.StartQuery(std::move(request));
     std::this_thread::sleep_for(250ms);
-    while (event_loop.GetActiveQueryCount() > 0) {
+    while (event_loop.ActiveQueryCount() > 0) {
         std::this_thread::sleep_for(100ms);
     }
 
     event_loop.Stop();
-
-    wing::shutdown();
 
     return 0;
 }

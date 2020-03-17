@@ -1,4 +1,4 @@
-#include "wing/QueryStatus.h"
+#include "wing/QueryStatus.hpp"
 
 namespace wing {
 

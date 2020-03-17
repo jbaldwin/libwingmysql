@@ -41,8 +41,8 @@ public:
 
     Statement(const Statement&) = default;
     Statement(Statement&&) = default;
-    auto operator=(const Statement&) -> Statement& = default;
-    auto operator=(Statement &&) -> Statement& = default;
+    auto operator=(const Statement&) noexcept -> Statement& = default;
+    auto operator=(Statement&&) noexcept -> Statement& = default;
 
     /**
      * Stream operator to accept raw query parts - these pieces are never escaped!

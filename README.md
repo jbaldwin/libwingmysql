@@ -13,7 +13,7 @@ libwingmysql - Safe Easy to use C++17 MySQL Client Library
 
 https://github.com/jbaldwin/libwingmysql
 
-**libwingmysql** is a C++17 client library that provides and easy to use high throughput asynchronous MySQL queries.
+**libwingmysql** is a C++17 client library that provides and easy to use API for both synchronous _and_ asynchrous MySQL queries.
 
 **libwingmysql** is licensed under the Apache 2.0 license.
 
@@ -29,56 +29,56 @@ https://github.com/jbaldwin/libwingmysql
 
 ## Requirements
     C++17 compiler (g++/clang++)
-    CMake 2.8+
+    CMake
+    make and/or ninja
     pthreads/std::thread
-    libuv
-        [dynamically linked]
-        [no override available currently]
-    C mysql-client
-        [statically linked]
-        [override default location via: -DMYSQL_CLIENT:STRING=/usr/lib64/mysql/libmysqlclient_r.a]
-        [The _r version is required]
+    libuv devel
+    zlib devel
+    mysqlclient devel
 
 ## Instructions
 
 ### Building
-    # This will produce lib/libwingmysql.a and bin/<examples>
     mkdir Release && cd Release
     cmake -DCMAKE_BUILD_TYPE=Release ..
-    cmake --build . --j4 # change 4 to number of cores available
+    cmake --build .
 
 # Examples
 
 See all of the examples under the examples/ directory.
 
 ### Simple Synchronous Query
-    wing::startup();
-    
-    wing::ConnectionInfo connection("127.0.0.1", 3306, "user", "password", "DB");
-    wing::QueryPool query_pool(connection);
-    auto query = query_pool.Produce("SELECT 1");
-    if(query->Execute() == wing::QueryStatus::SUCCESS)
+```C++
+wing::startup();
+
+wing::ConnectionInfo connection{"127.0.0.1", 3306, "user", "password", "DB"};
+wing::QueryPool query_pool{connection};
+auto query = query_pool.Produce("SELECT 1");
+if(query->Execute() == wing::QueryStatus::SUCCESS)
+{
+    for(auto& row : query->Rows()
     {
-        for(auto& row : query->GetRows()
+        for(auto& value : row.Values())
         {
-            for(auto& value : row.GetValues())
-            {
-                // If the field is nullable, use IsNull() to check before using the value.
-                // Use As<T> functions to convert the data into the columns type
-                std::cout << value.AsStringView() << " ";
-            }
-            std::cout << "\n";
+            // If the field is nullable, use IsNull() to check before using the value.
+            // Use As<T> functions to convert the data into the columns type
+            std::cout << value.AsStringView() << " ";
         }
+        std::cout << "\n";
     }
-    
-    wing::shutdown();
+}
+
+wing::shutdown();
+```
 
 ### Synchronous Query with Bind Parameter
-    wing::ConnectionInfo connection("127.0.0.1", 3306, "user", "password", "DB");
-    wing::QueryPool query_pool(connection);
-    auto query = query_pool.Produce("SELECT ?");
-    query->BindUInt64(12345);
-    query->Execute();
+```C++
+wing::ConnectionInfo connection{"127.0.0.1", 3306, "user", "password", "DB"};
+wing::QueryPool query_pool{connection};
+auto query = query_pool.Produce("SELECT ?");
+query->BindUInt64(12345);
+query->Execute();
+```
 
 ### Asynchronous Query
 

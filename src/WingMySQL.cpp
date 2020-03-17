@@ -1,4 +1,4 @@
-#include "wing/WingMySQL.h"
+#include "wing/WingMySQL.hpp"
 
 #include <atomic>
 
@@ -8,7 +8,7 @@ namespace wing {
 
 auto startup() -> void
 {
-    static std::atomic<uint64_t> initialized { 0 };
+    static std::atomic<uint64_t> initialized{ 0 };
 
     if (initialized.fetch_add(1) == 0) {
         mysql_library_init(0, nullptr, nullptr);
@@ -18,7 +18,7 @@ auto startup() -> void
 
 auto startup_thread() -> void
 {
-    thread_local std::atomic<uint64_t> initialized { 0 };
+    thread_local std::atomic<uint64_t> initialized{ 0 };
 
     if (initialized.fetch_add(1) == 0) {
         mysql_thread_init();
@@ -27,7 +27,7 @@ auto startup_thread() -> void
 
 auto shutdown_thread() -> void
 {
-    thread_local std::atomic<uint64_t> initialized { 0 };
+    thread_local std::atomic<uint64_t> initialized{ 0 };
 
     if (initialized.fetch_add(1) == 0) {
         mysql_thread_end();
@@ -36,12 +36,32 @@ auto shutdown_thread() -> void
 
 auto shutdown() -> void
 {
-    static std::atomic<uint64_t> cleaned { 0 };
+    static std::atomic<uint64_t> cleaned{ 0 };
 
     if (cleaned.fetch_add(1) == 0) {
         shutdown_thread();
         mysql_library_end();
     }
+}
+
+GlobalScopeInitializer::GlobalScopeInitializer()
+{
+    startup();
+}
+
+GlobalScopeInitializer::~GlobalScopeInitializer()
+{
+    shutdown();
+}
+
+ThreadScopeInitializer::ThreadScopeInitializer()
+{
+    startup_thread();
+}
+
+ThreadScopeInitializer::~ThreadScopeInitializer()
+{
+    shutdown_thread();
 }
 
 } // wing

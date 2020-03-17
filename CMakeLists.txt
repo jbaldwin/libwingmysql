@@ -44,17 +44,17 @@ if (WING_PERCONA_SSL_DISABLED)
 ENDIF()
 
 set(LIB_WING_MYSQL_SOURCE_FILES
-    inc/wing/ConnectionInfo.h src/ConnectionInfo.cpp
-    inc/wing/EventLoop.h src/EventLoop.cpp
-    inc/wing/QueryHandle.h src/QueryHandle.cpp
-    inc/wing/Query.h src/Query.cpp
-    inc/wing/QueryPool.h src/QueryPool.cpp
-    inc/wing/QueryStatus.h src/QueryStatus.cpp
-    inc/wing/Row.h src/Row.cpp
-    inc/wing/Statement.h inc/wing/Statement.tcc src/Statement.cpp
-    inc/wing/Util.h src/Util.cpp
-    inc/wing/Value.h src/Value.cpp
-    inc/wing/WingMySQL.h src/WingMySQL.cpp
+    inc/wing/ConnectionInfo.hpp src/ConnectionInfo.cpp
+    inc/wing/EventLoop.hpp src/EventLoop.cpp
+    inc/wing/QueryHandle.hpp src/QueryHandle.cpp
+    inc/wing/Query.hpp src/Query.cpp
+    inc/wing/QueryPool.hpp src/QueryPool.cpp
+    inc/wing/QueryStatus.hpp src/QueryStatus.cpp
+    inc/wing/Row.hpp src/Row.cpp
+    inc/wing/Statement.hpp inc/wing/Statement.tcc src/Statement.cpp
+    inc/wing/Util.hpp src/Util.cpp
+    inc/wing/Value.hpp src/Value.cpp
+    inc/wing/WingMySQL.hpp src/WingMySQL.cpp
 )
 
 ##### Export the Library target #####

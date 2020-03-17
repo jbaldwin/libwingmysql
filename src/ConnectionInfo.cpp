@@ -1,4 +1,4 @@
-#include "wing/ConnectionInfo.h"
+#include "wing/ConnectionInfo.hpp"
 
 namespace wing {
 
@@ -33,41 +33,6 @@ ConnectionInfo::ConnectionInfo(
     , m_database(std::move(database))
     , m_client_flags(client_flags)
 {
-}
-
-auto ConnectionInfo::GetHost() const -> const std::string&
-{
-    return m_host;
-}
-
-auto ConnectionInfo::GetPort() const -> uint16_t
-{
-    return m_port;
-}
-
-auto ConnectionInfo::GetSocket() const -> const std::string&
-{
-    return m_socket;
-}
-
-auto ConnectionInfo::GetUser() const -> const std::string&
-{
-    return m_user;
-}
-
-auto ConnectionInfo::GetPassword() const -> const std::string&
-{
-    return m_password;
-}
-
-auto ConnectionInfo::GetDatabase() const -> const std::string&
-{
-    return m_database;
-}
-
-auto ConnectionInfo::GetClientFlags() const -> uint64_t
-{
-    return m_client_flags;
 }
 
 } // wing

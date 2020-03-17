@@ -1,5 +1,5 @@
-#include "wing/QueryPool.h"
-#include "wing/EventLoop.h"
+#include "wing/QueryPool.hpp"
+#include "wing/EventLoop.hpp"
 
 namespace wing {
 
@@ -20,11 +20,6 @@ QueryPool::QueryPool(
 QueryPool::~QueryPool()
 {
     m_queries.clear();
-}
-
-auto QueryPool::GetConnection() const -> const ConnectionInfo&
-{
-    return m_connection;
 }
 
 auto QueryPool::Produce(
@@ -57,29 +52,29 @@ auto QueryPool::Produce(
         m_queries.pop_back();
         m_lock.unlock();
 
-        request_handle_ptr->SetOnCompleteHandler(std::move(on_complete));
-        request_handle_ptr->SetTimeout(timeout);
-        request_handle_ptr->SetStatement(std::move(statement));
+        request_handle_ptr->OnCompleteHandler(std::move(on_complete));
+        request_handle_ptr->Timeout(timeout);
+        request_handle_ptr->Statement(std::move(statement));
 
         return QueryHandle(std::move(request_handle_ptr));
     }
 }
 
 auto QueryPool::returnQuery(
-    std::unique_ptr<Query> query_handle) -> void
+    std::unique_ptr<Query> query_handle_ptr) -> void
 {
     // If the handle has had any kind of error while processing
     // simply release the memory and close it.
     // libuv will shutdown the poll/timer handles
     // and then delete the request handle.
-    if (query_handle->HasError()) {
+    if (query_handle_ptr->Error().has_value()) {
         return;
     }
 
     {
-        query_handle->Reset();
+        query_handle_ptr->Reset();
         std::lock_guard<std::mutex> guard(m_lock);
-        m_queries.emplace_back(std::move(query_handle));
+        m_queries.emplace_back(std::move(query_handle_ptr));
     }
 }
 

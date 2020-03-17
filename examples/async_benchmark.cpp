@@ -1,10 +1,10 @@
 #include <atomic>
 #include <iostream>
 
-#include <wing/WingMySQL.h>
+#include <wing/WingMySQL.hpp>
 
-static std::atomic<uint64_t> count { 0 };
-static std::atomic<uint64_t> errors { 0 };
+static std::atomic<uint64_t> count{ 0 };
+static std::atomic<uint64_t> errors{ 0 };
 
 static std::chrono::seconds duration;
 static size_t connections;
@@ -38,17 +38,17 @@ static auto print_stats(
 static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) -> void
 {
     ++count;
-    if (request->HasError()) {
+    if (request->Error().has_value()) {
         ++errors;
-        std::cout << "ERROR: " << wing::to_string(request->GetQueryStatus()) << " " << request->GetError() << "\n";
+        std::cout << "ERROR: " << wing::to_string(request->QueryStatus()) << " " << request->Error().value() << "\n";
     }
 
-    if (request->GetQueryStatus() == wing::QueryStatus::SUCCESS) {
+    if (request->QueryStatus() == wing::QueryStatus::SUCCESS) {
         event_loop.StartQuery(std::move(request));
     } else {
-        auto& request_pool = event_loop.GetQueryPool();
+        /// libwingmysql doesn't let you restart a failed request
         auto callback = std::bind(on_complete, _1, std::ref(event_loop));
-        request = request_pool.Produce(mysql_statement, 1000ms, callback);
+        request = event_loop.ProduceQuery(mysql_statement, 1000ms, callback);
         event_loop.StartQuery(std::move(request));
     }
 }
@@ -69,23 +69,20 @@ int main(int argc, char* argv[])
     db = (argv[7]);
     mysql_statement << argv[8];
 
-    wing::startup();
+    wing::GlobalScopeInitializer wing_gsi{};
 
     wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
     wing::EventLoop event_loop(connection);
-    auto& request_pool = event_loop.GetQueryPool();
 
     for (size_t i = 0; i < connections; ++i) {
         auto callback = std::bind(on_complete, _1, std::ref(event_loop));
-        auto request = request_pool.Produce(mysql_statement, 1000ms, std::move(callback));
+        auto request = event_loop.ProduceQuery(mysql_statement, 1000ms, std::move(callback));
         event_loop.StartQuery(std::move(request));
     }
 
     std::this_thread::sleep_for(duration);
 
     event_loop.Stop();
-
-    wing::shutdown();
 
     print_stats(static_cast<uint64_t>(duration.count()), 1, count, errors);
 
