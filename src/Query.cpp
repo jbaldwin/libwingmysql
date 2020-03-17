@@ -147,7 +147,7 @@ auto Query::Execute() -> wing::QueryStatus
     return m_query_status;
 }
 
-auto Query::Error() -> std::optional<std::string>
+auto Query::Error() const -> std::optional<std::string>
 {
     if (m_had_error) {
         return { mysql_error(&m_mysql) };
