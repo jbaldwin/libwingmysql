@@ -123,15 +123,22 @@ auto Query::Execute() -> wing::QueryStatus
         });
 
     if (0 == mysql_real_query(&m_mysql, m_final_statement.c_str(), m_final_statement.length())) {
-        m_result = mysql_store_result(&m_mysql);
-        if (m_result != nullptr) {
-            m_query_status = QueryStatus::SUCCESS;
-            m_field_count = mysql_num_fields(m_result);
-            m_row_count = mysql_num_rows(m_result);
-            parseRows();
+        if (m_statement.m_expect_result) {
+            m_result = mysql_store_result(&m_mysql);
+            if (m_result != nullptr) {
+                m_query_status = QueryStatus::SUCCESS;
+                m_field_count = mysql_num_fields(m_result);
+                m_row_count = mysql_num_rows(m_result);
+                parseRows();
+            } else {
+                m_query_status = QueryStatus::STORE_FAILURE;
+                m_had_error = true;
+            }
         } else {
-            m_query_status = QueryStatus::STORE_FAILURE;
-            m_had_error = true;
+            m_query_status = QueryStatus::SUCCESS;
+            m_field_count = 0;
+            m_row_count = 0;
+            m_parsed_result = true;
         }
     } else {
         m_query_status = QueryStatus::TIMEOUT;
