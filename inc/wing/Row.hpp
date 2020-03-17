@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wing/Value.h"
+#include "wing/Value.hpp"
 
 #include <vector>
 
@@ -23,14 +23,14 @@ public:
     /**
      * @return The number of values/columns in this row.
      */
-    auto GetColumnCount() const -> size_t;
+    auto ColumnCount() const -> size_t { return m_column_count; }
 
     /**
      * @param idx The value to fetch at this index.
      * @return The specified value at idx.
      */
-    auto GetColumn(
-        size_t idx) const -> const Value&;
+    auto Column(
+        size_t idx) const -> const Value& { return m_values.at(idx); }
 
 private:
     Row(

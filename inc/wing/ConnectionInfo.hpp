@@ -41,37 +41,37 @@ public:
     /**
      * @return The MySQL server hostname.
      */
-    auto GetHost() const -> const std::string&;
+    auto Host() const -> const std::string& { return m_host; }
 
     /**
      * @return The MySQL server port.
      */
-    auto GetPort() const -> uint16_t;
+    auto Port() const -> uint16_t { return m_port; }
 
     /**
      * @return The MySQL unix-socket.
      */
-    auto GetSocket() const -> const std::string&;
+    auto Socket() const -> const std::string& { return m_socket; }
 
     /**
      * @return The MySQL user to authenticate with.
      */
-    auto GetUser() const -> const std::string&;
+    auto User() const -> const std::string& { return m_user; }
 
     /**
      * @return The MySQL password to authenticate with.
      */
-    auto GetPassword() const -> const std::string&;
+    auto Password() const -> const std::string& { return m_password; }
 
     /**
      * @return The database to use upon connecting.
      */
-    auto GetDatabase() const -> const std::string&;
+    auto Database() const -> const std::string& { return m_database; }
 
     /**
      * @return The MySQL client flags.
      */
-    auto GetClientFlags() const -> uint64_t;
+    auto ClientFlags() const -> uint64_t { return m_client_flags; }
 
 private:
     std::string m_host;

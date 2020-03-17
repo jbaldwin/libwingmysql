@@ -1,7 +1,7 @@
-#include "wing/Query.h"
-#include "wing/EventLoop.h"
-#include "wing/QueryPool.h"
-#include "wing/Util.h"
+#include "wing/Query.hpp"
+#include "wing/EventLoop.hpp"
+#include "wing/QueryPool.hpp"
+#include "wing/Util.hpp"
 
 #include <mysql/mysql.h>
 
@@ -16,7 +16,7 @@ Query::Query(
     const ConnectionInfo& connection,
     std::function<void(QueryHandle)> on_complete,
     std::chrono::milliseconds timeout,
-    Statement statement)
+    wing::Statement statement)
     : m_event_loop(event_loop)
     , m_query_pool(query_pool)
     , m_connection(connection)
@@ -26,7 +26,7 @@ Query::Query(
 {
     mysql_init(&m_mysql);
 
-    SetTimeout(timeout);
+    Timeout(timeout);
 
     unsigned int connect_timeout = 1;
     mysql_options(&m_mysql, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
@@ -53,23 +53,23 @@ Query::~Query()
 auto Query::Reset() -> void
 {
     freeResult();
-    m_statement = Statement();
+    m_statement = wing::Statement{};
     m_query_status = QueryStatus::BUILDING;
     m_had_error = false;
 }
 
-auto Query::SetOnCompleteHandler(
+auto Query::OnCompleteHandler(
     std::function<void(QueryHandle)> on_complete) -> void
 {
     m_on_complete = std::move(on_complete);
 }
 
-auto Query::GetQueryStatus() const -> QueryStatus
+auto Query::QueryStatus() const -> wing::QueryStatus
 {
     return m_query_status;
 }
 
-auto Query::SetTimeout(
+auto Query::Timeout(
     std::chrono::milliseconds timeout) -> void
 {
     auto timeout_seconds = std::chrono::duration_cast<std::chrono::seconds>(m_timeout);
@@ -79,22 +79,22 @@ auto Query::SetTimeout(
     m_timeout = timeout;
 }
 
-auto Query::GetTimeout() const -> std::chrono::milliseconds
+auto Query::Timeout() const -> std::chrono::milliseconds
 {
     return m_timeout;
 }
 
-auto Query::SetStatement(Statement statement) -> void
+auto Query::Statement(wing::Statement statement) -> void
 {
     m_statement = std::move(statement);
 }
 
-auto Query::GetQueryOriginal() const -> const std::string&
+auto Query::QueryOriginal() const -> const std::string&
 {
     return m_final_statement;
 }
 
-auto Query::Execute() -> QueryStatus
+auto Query::Execute() -> wing::QueryStatus
 {
     if (!m_is_connected) {
         if (!connect()) {
@@ -140,27 +140,26 @@ auto Query::Execute() -> QueryStatus
     return m_query_status;
 }
 
-auto Query::HasError() const -> bool
+auto Query::Error() -> std::optional<std::string>
 {
-    return m_had_error;
+    if (m_had_error) {
+        return { mysql_error(&m_mysql) };
+    } else {
+        return {};
+    }
 }
 
-auto Query::GetError() -> std::string
-{
-    return mysql_error(&m_mysql);
-}
-
-auto Query::GetFieldCount() const -> size_t
+auto Query::FieldCount() const -> size_t
 {
     return m_field_count;
 }
 
-auto Query::GetRowCount() const -> size_t
+auto Query::RowCount() const -> size_t
 {
     return m_row_count;
 }
 
-auto Query::GetRow(size_t idx) const -> const Row&
+auto Query::Row(size_t idx) const -> const wing::Row&
 {
     return m_rows.at(idx);
 }
@@ -170,13 +169,13 @@ auto Query::connect() -> bool
     if (!m_is_connected) {
         auto* success = mysql_real_connect(
             &m_mysql,
-            m_connection.GetHost().c_str(),
-            m_connection.GetUser().c_str(),
-            m_connection.GetPassword().c_str(),
-            m_connection.GetDatabase().c_str(),
-            m_connection.GetPort(),
-            m_connection.GetSocket().c_str(),
-            m_connection.GetClientFlags());
+            m_connection.Host().c_str(),
+            m_connection.User().c_str(),
+            m_connection.Password().c_str(),
+            m_connection.Database().c_str(),
+            m_connection.Port(),
+            m_connection.Socket().c_str(),
+            m_connection.ClientFlags());
 
         if (success == nullptr) {
             return false;
@@ -190,13 +189,13 @@ auto Query::connect() -> bool
 
 auto Query::parseRows() -> void
 {
-    if (!m_parsed_result && GetRowCount() > 0) {
+    if (!m_parsed_result && RowCount() > 0) {
         m_parsed_result = true;
-        m_rows.reserve(GetRowCount());
+        m_rows.reserve(RowCount());
         MYSQL_ROW mysql_row = nullptr;
         while ((mysql_row = mysql_fetch_row(m_result))) {
             auto lengths = mysql_fetch_lengths(m_result);
-            Row row(mysql_row, m_field_count, lengths);
+            wing::Row row(mysql_row, m_field_count, lengths);
             m_rows.emplace_back(std::move(row));
         }
     }

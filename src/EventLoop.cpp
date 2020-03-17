@@ -1,4 +1,4 @@
-#include "wing/EventLoop.h"
+#include "wing/EventLoop.hpp"
 
 namespace wing {
 
@@ -41,11 +41,6 @@ EventLoop::~EventLoop()
 auto EventLoop::IsRunning() -> bool
 {
     return m_is_query_running;
-}
-
-auto EventLoop::GetActiveQueryCount() const -> uint64_t
-{
-    return m_active_query_count;
 }
 
 auto EventLoop::Stop() -> void
@@ -93,9 +88,12 @@ auto EventLoop::Stop() -> void
     }
 }
 
-auto EventLoop::GetQueryPool() -> QueryPool&
+auto EventLoop::ProduceQuery(
+    wing::Statement statement,
+    std::chrono::milliseconds timeout,
+    std::function<void(QueryHandle)> on_complete) -> QueryHandle
 {
-    return m_query_pool;
+    return m_query_pool.Produce(std::move(statement), timeout, std::move(on_complete));
 }
 
 auto EventLoop::StartQuery(
@@ -108,11 +106,12 @@ auto EventLoop::StartQuery(
 
     // Do not accept query objects that had errors
     // on previous queries.
-    if (query->HasError()) {
+    if (query->Error().has_value()) {
         return false;
     }
 
     {
+        ++m_active_query_count;
         std::lock_guard<std::mutex> guard(m_pending_queries_lock);
         m_pending_queries.emplace_back(std::move(query));
         uv_async_send(&m_query_async); // must be in the lock scope
@@ -163,11 +162,10 @@ auto EventLoop::requestsAcceptForQueryAsync(
         /**
          * This is moving ownership into libuv while the query is executed.
          */
-        Query* query_handle = query.m_query_handle.release();
+        Query* query_handle = query.m_query_handle_ptr.release();
 
         auto* work = new uv_work_t();
         work->data = query_handle;
-        ++m_active_query_count;
         uv_queue_work(
             m_query_loop,
             work,

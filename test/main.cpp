@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include <wing/WingMySQL.h>
+#include <wing/WingMySQL.hpp>
 
 TEST_CASE("catch_is_working")
 {

@@ -1,13 +1,14 @@
 #pragma once
 
-#include "wing/ConnectionInfo.h"
-#include "wing/QueryStatus.h"
-#include "wing/Row.h"
-#include "wing/Statement.h"
+#include "wing/ConnectionInfo.hpp"
+#include "wing/QueryStatus.hpp"
+#include "wing/Row.hpp"
+#include "wing/Statement.hpp"
 
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -30,8 +31,8 @@ public:
 
     Query(const Query&) = delete;
     Query(Query&&) = delete;
-    auto operator=(const Query&) = delete;
-    auto operator=(Query &&) -> Query& = delete;
+    auto operator=(const Query&) noexcept -> Query& = delete;
+    auto operator=(Query&&) noexcept -> Query& = delete;
 
     /**
      * Resets QueryHandle, freeing results and clearing m_query_parts and m_bind_params
@@ -41,24 +42,24 @@ public:
     /**
      * @param on_complete The on complete function handle for this query.
      */
-    auto SetOnCompleteHandler(
+    auto OnCompleteHandler(
         std::function<void(QueryHandle)> on_complete) -> void;
 
     /**
      * @return Gets the query status after a completed query.
      */
-    auto GetQueryStatus() const -> QueryStatus;
+    auto QueryStatus() const -> QueryStatus;
 
     /**
      * @param timeout The timeout for this query in milliseconds.
      */
-    auto SetTimeout(
+    auto Timeout(
         std::chrono::milliseconds timeout) -> void;
 
     /**
      * @return The timeout for this query in milliseconds.
      */
-    auto GetTimeout() const -> std::chrono::milliseconds;
+    auto Timeout() const -> std::chrono::milliseconds;
 
     /**
      * Sets the query statement for this query, the statement object
@@ -66,13 +67,13 @@ public:
      * the parameters
      * @param statement the statement set for this query
      */
-    auto SetStatement(
-        Statement statement) -> void;
+    auto Statement(
+        wing::Statement statement) -> void;
 
     /**
      * @return the original query that was executed
      */
-    auto GetQueryOriginal() const -> const std::string&;
+    auto QueryOriginal() const -> const std::string&;
 
     /**
      * Executes the query synchronously.
@@ -86,33 +87,28 @@ public:
      * however it will block until it finishes or times out.
      * @return The status of the query, e.g. success or timeout.
      */
-    auto Execute() -> QueryStatus;
+    auto Execute() -> wing::QueryStatus;
 
     /**
-     * @return True if the query had an error while executing.
+     * @return If no error then empty optional, otherwise the MySQL client error message.
      */
-    auto HasError() const -> bool;
-
-    /**
-     * @return The MySQL client error message.
-     */
-    auto GetError() -> std::string;
+    auto Error() -> std::optional<std::string>;
 
     /**
      * @return The number of fields returned from the query.
      */
-    auto GetFieldCount() const -> size_t;
+    auto FieldCount() const -> size_t;
 
     /**
      * @return The number of rows returned from the query.
      */
-    auto GetRowCount() const -> size_t;
+    auto RowCount() const -> size_t;
 
     /**
      * @param idx The row to fetch.
      * @return The row.
      */
-    auto GetRow(
+    auto Row(
         size_t idx) const -> const Row&;
 
 private:
@@ -122,7 +118,7 @@ private:
         const ConnectionInfo& connection,
         std::function<void(QueryHandle)> on_complete,
         std::chrono::milliseconds timeout,
-        Statement statement);
+        wing::Statement statement);
 
     /**
      * If the handle has not yet connected, this will block and connect.
@@ -156,24 +152,24 @@ private:
     /// The timeout in milliseconds.
     std::chrono::milliseconds m_timeout;
     MYSQL m_mysql;
-    MYSQL_RES* m_result { nullptr };
+    MYSQL_RES* m_result{ nullptr };
     /// True if the result has already been parsed (to avoid doing it multiple times).
-    bool m_parsed_result { false };
+    bool m_parsed_result{ false };
     /// The number of fields returned from the query.
-    size_t m_field_count { 0 };
+    size_t m_field_count{ 0 };
     /// The number of rows returned from the query.
-    size_t m_row_count { 0 };
+    size_t m_row_count{ 0 };
     /// User facing rows view.
-    std::vector<Row> m_rows;
+    std::vector<wing::Row> m_rows;
     /// Has this MySQL client connected to the server yet?
-    bool m_is_connected { false };
+    bool m_is_connected{ false };
     /// Has this MySQL client had an error?
-    bool m_had_error { false };
+    bool m_had_error{ false };
 
     /// The status of the last query.
-    QueryStatus m_query_status { QueryStatus::BUILDING };
+    wing::QueryStatus m_query_status{ QueryStatus::BUILDING };
     /// The SQL statement for this query
-    Statement m_statement;
+    wing::Statement m_statement;
     /// The SQL statement that was last executed
     std::string m_final_statement;
 

@@ -1,5 +1,5 @@
-#include "wing/Statement.h"
-#include "wing/Util.h"
+#include "wing/Statement.hpp"
+#include "wing/Util.hpp"
 
 #include <type_traits>
 

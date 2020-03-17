@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wing/Query.h"
+#include "wing/Query.hpp"
 
 #include <memory>
 
@@ -19,8 +19,8 @@ public:
     ~QueryHandle();
     QueryHandle(const QueryHandle&) = delete;
     QueryHandle(QueryHandle&& from);
-    auto operator=(const QueryHandle&) = delete;
-    auto operator=(QueryHandle &&) -> QueryHandle&;
+    auto operator=(const QueryHandle&) noexcept -> QueryHandle& = delete;
+    auto operator=(QueryHandle&&) noexcept -> QueryHandle&;
 
     /**
      * Access to the SQL Query object.
@@ -34,9 +34,9 @@ public:
     /** @} */
 private:
     explicit QueryHandle(
-        std::unique_ptr<Query> query_handle);
+        std::unique_ptr<Query> query_handle_ptr);
 
-    std::unique_ptr<Query> m_query_handle;
+    std::unique_ptr<Query> m_query_handle_ptr;
 };
 
 } // wing
