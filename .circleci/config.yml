@@ -40,7 +40,7 @@ jobs:
                     cd build-release-g++
                     cmake \
                         -GNinja \
-                        -DMYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
+                        -DWING_MYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
                         -DCMAKE_BUILD_TYPE=Release \
                         -DCMAKE_C_COMPILER=gcc \
                         -DCMAKE_CXX_COMPILER=g++ \
@@ -53,7 +53,7 @@ jobs:
                     cd build-release-clang++
                     cmake \
                         -GNinja \
-                        -DMYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
+                        -DWING_MYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
                         -DCMAKE_BUILD_TYPE=Release \
                         -DCMAKE_C_COMPILER=clang \
                         -DCMAKE_CXX_COMPILER=clang++ \
