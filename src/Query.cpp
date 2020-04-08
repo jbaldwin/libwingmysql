@@ -34,8 +34,10 @@ Query::Query(
     uint64_t auto_reconnect = 1;
     mysql_options(&m_mysql, MYSQL_OPT_RECONNECT, &auto_reconnect);
 
-    // bool ssl = false;
-    // mysql_options(&m_mysql, MYSQL_OPT_SSL_ENFORCE, &ssl);
+#ifdef WING_MYSQL_OPT_SSL_ENFORCE_DISABLED
+    bool ssl = false;
+    mysql_options(&m_mysql, MYSQL_OPT_SSL_ENFORCE, &ssl);
+#endif
 
     //  Some mysql libraries do not support SSL_MODE_DISABLED
 #ifdef WING_PERCONA_SSL_DISABLED
