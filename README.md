@@ -1,7 +1,7 @@
 libwingmysql - Safe Easy to use C++17 MySQL Client Library
 ==========================================================
 
-[![CircleCI](https://circleci.com/gh/jbaldwin/libwingmysql/tree/master.svg?style=svg)](https://circleci.com/gh/jbaldwin/libwingmysql/tree/master)
+[![CI](https://github.com/jbaldwin/libwingmysql/workflows/build-release-test/badge.svg)](https://github.com/jbaldwin/libwingmysql/workflows/build-release-test/badge.svg)
 [![language][badge.language]][language]
 [![license][badge.license]][license]
 
