@@ -9,7 +9,7 @@
 TEST_CASE("Create table")
 {
     using namespace std::chrono_literals;
-    wing::ConnectionInfo connection{ "127.0.0.1", 3306, "user", "passw0rd" };
+    wing::ConnectionInfo connection{ "mysql", 3306, "user", "passw0rd" };
     wing::QueryPool pool{ std::move(connection) };
 
     wing::Statement create_table_stm{};
