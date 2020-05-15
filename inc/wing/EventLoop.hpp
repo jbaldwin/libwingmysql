@@ -33,7 +33,7 @@ public:
     /**
      * @return True if the query and connect threads are running.
      */
-    auto IsRunning() -> bool;
+    [[nodiscard]] auto IsRunning() -> bool;
 
     /**
      * This count does not include the number of queries that
@@ -41,7 +41,7 @@ public:
      * queued to connect.
      * @return Gets an active query count that is being executed.
      */
-    auto ActiveQueryCount() const -> uint64_t { return m_active_query_count; }
+    [[nodiscard]] auto ActiveQueryCount() const -> uint64_t { return m_active_query_count; }
 
     /**
      * Stops the event loop and shuts down all current queries.
@@ -57,7 +57,7 @@ public:
      * @param on_complete The on complete callback handler.
      * @return A query handle to set its query details on.
      */
-    auto ProduceQuery(
+    [[nodiscard]] auto ProduceQuery(
         wing::Statement statement,
         std::chrono::milliseconds timeout,
         std::function<void(QueryHandle)> on_complete) -> QueryHandle;
@@ -70,6 +70,20 @@ public:
     auto StartQuery(
         QueryHandle query) -> bool;
 
+    /**
+     * Gets the background event loop's native thread id.  This will only be available after the
+     * background thread has started, e.g. `IsRunning()` returns `true`.
+     * @return std::thread::native_handle_type for the background event loop thread.
+     */
+    [[nodiscard]] auto NativeThreadHandle() const -> const std::optional<std::thread::native_handle_type>& { return m_native_handle; }
+
+    /**
+     * Gets the background event loop's native operating system thread id.  This will only be available
+     * after the background thread has started, e.g. `IsRunning()` returns `true`.
+     * @return gettid()
+     */
+    [[nodiscard]] auto OperatingSystemThreadId() const -> const std::optional<pid_t>& { return m_tid; }
+
 private:
     QueryPool m_query_pool;
 
@@ -78,6 +92,11 @@ private:
     std::atomic<uint64_t> m_active_query_count{ 0 };
 
     std::thread m_background_query_thread;
+    /// The background thread operating system thread id.
+    std::optional<pid_t> m_tid{};
+    /// The background thread native handle type id (pthread_t).
+    std::optional<std::thread::native_handle_type> m_native_handle{};
+
     uv_loop_t* m_query_loop{ uv_loop_new() };
     uv_async_t m_query_async;
     std::atomic<bool> m_query_async_closed{ false };

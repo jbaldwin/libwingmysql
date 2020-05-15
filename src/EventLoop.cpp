@@ -1,5 +1,8 @@
 #include "wing/EventLoop.hpp"
 
+#include <sys/syscall.h>
+#include <unistd.h>
+
 namespace wing {
 
 using namespace std::chrono_literals;
@@ -122,6 +125,9 @@ auto EventLoop::StartQuery(
 
 auto EventLoop::run_queries() -> void
 {
+    m_tid = syscall(SYS_gettid);
+    m_native_handle = m_background_query_thread.native_handle();
+
     mysql_thread_init();
     m_is_query_running = true;
     uv_run(m_query_loop, UV_RUN_DEFAULT);
