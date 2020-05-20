@@ -126,7 +126,12 @@ auto EventLoop::StartQuery(
 auto EventLoop::run_queries() -> void
 {
     m_tid = syscall(SYS_gettid);
-    m_native_handle = m_background_query_thread.native_handle();
+    /**
+     * Note that its possible to use m_background_query_thread.native_handle() however
+     * gdb and other debugging tools have an issue reporting the thread id correctly, so
+     * for now its better to call pthread_self().
+     */
+    m_native_handle = pthread_self();
 
     mysql_thread_init();
     m_is_query_running = true;
