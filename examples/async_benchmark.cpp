@@ -3,17 +3,18 @@
 
 #include <wing/WingMySQL.hpp>
 
-static std::atomic<uint64_t> count{ 0 };
-static std::atomic<uint64_t> errors{ 0 };
+static std::atomic<uint64_t> count { 0 };
+static std::atomic<uint64_t> errors { 0 };
 
 static std::chrono::seconds duration;
+static size_t threads;
 static size_t connections;
 static std::string hostname;
 static uint16_t port;
 static std::string user;
 static std::string password;
 static std::string db;
-static wing::Statement mysql_statement;
+static wing::Statement statement;
 
 using namespace std::chrono_literals;
 using namespace std::placeholders;
@@ -35,7 +36,7 @@ static auto print_stats(
     std::cout << "Requests/sec: " << (total / static_cast<double>(duration_s)) << "\n";
 }
 
-static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) -> void
+static auto on_complete(wing::QueryHandle request, wing::Executor& executor) -> void
 {
     ++count;
     if (request->Error().has_value()) {
@@ -44,47 +45,51 @@ static auto on_complete(wing::QueryHandle request, wing::EventLoop& event_loop) 
     }
 
     if (request->QueryStatus() == wing::QueryStatus::SUCCESS) {
-        event_loop.StartQuery(std::move(request));
+        (void)executor.StartQuery(
+            statement,
+            1000ms,
+            [&executor](wing::QueryHandle qh) {
+                on_complete(std::move(qh), executor);
+            });
     } else {
         /// libwingmysql doesn't let you restart a failed request
-        auto callback = std::bind(on_complete, _1, std::ref(event_loop));
-        request = event_loop.ProduceQuery(mysql_statement, 1000ms, callback);
-        event_loop.StartQuery(std::move(request));
+        (void)executor.StartQuery(statement, 1000ms, [&executor](wing::QueryHandle qh) {
+            on_complete(std::move(qh), executor);
+        });
     }
 }
 
 int main(int argc, char* argv[])
 {
-    if (argc < 9) {
-        std::cout << argv[0] << " <duration_seconds> <connections> <hostname> <port> <user> <password> <db> <query>\n";
+    if (argc < 10) {
+        std::cout << argv[0] << " <duration_seconds> <threads> <connections> <hostname> <port> <user> <password> <db> <query>\n";
         return 1;
     }
 
     duration = std::chrono::seconds(std::stoul(argv[1]));
-    connections = std::stoul(argv[2]);
-    hostname = (argv[3]);
-    port = static_cast<uint16_t>(std::stoi(argv[4]));
-    user = (argv[5]);
-    password = (argv[6]);
-    db = (argv[7]);
-    mysql_statement << argv[8];
+    threads = std::stoul(argv[2]);
+    connections = std::stoul(argv[3]);
+    hostname = argv[4];
+    port = static_cast<uint16_t>(std::stoi(argv[5]));
+    user = argv[6];
+    password = argv[7];
+    db = argv[8];
+    statement << argv[9];
 
-    wing::GlobalScopeInitializer wing_gsi{};
-
-    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
-    wing::EventLoop event_loop(connection);
+    wing::ConnectionInfo connection { hostname, port, user, password, db, 0 };
+    wing::Executor executor { std::move(connection), threads };
 
     for (size_t i = 0; i < connections; ++i) {
-        auto callback = std::bind(on_complete, _1, std::ref(event_loop));
-        auto request = event_loop.ProduceQuery(mysql_statement, 1000ms, std::move(callback));
-        event_loop.StartQuery(std::move(request));
+        (void)executor.StartQuery(statement, 1000ms, [&executor](wing::QueryHandle qh) {
+            on_complete(std::move(qh), executor);
+        });
     }
 
     std::this_thread::sleep_for(duration);
 
-    event_loop.Stop();
+    executor.Stop();
 
-    print_stats(static_cast<uint64_t>(duration.count()), 1, count, errors);
+    print_stats(static_cast<uint64_t>(duration.count()), threads, count, errors);
 
     return 0;
 }

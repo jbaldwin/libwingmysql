@@ -17,24 +17,4 @@ namespace wing {
  */
 auto get_thread_local_stream() -> std::stringstream&;
 
-/**
- * Splits a string view by the delimiter.
- * @param s The string to split.
- * @param delim The delimiter to split on.
- * @return String views into each partition.
- */
-auto split_view(
-    std::string_view s,
-    char delim) -> std::vector<std::string_view>;
-
-/**
- * Splits a string view by the delimiter.
- * @param s The string to split.
- * @param delim The delimiter to split on.
- * @return String views into each partition.
- */
-auto split_view(
-    std::string_view s,
-    std::string_view delim) -> std::vector<std::string_view>;
-
 } // wing

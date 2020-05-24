@@ -33,16 +33,16 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::string hostname(argv[1]);
+    std::string hostname { argv[1] };
     uint16_t port = static_cast<uint16_t>(std::stoi(argv[2]));
-    std::string user(argv[3]);
-    std::string password(argv[4]);
-    std::string db(argv[5]);
+    std::string user { argv[3] };
+    std::string password { argv[4] };
+    std::string db { argv[5] };
 
     // everything after 5 should either be a raw string, or a -e followed by a string to escape
-    wing::Statement mysql_statement;
+    wing::Statement statement;
     for (int i = 6; i < argc; ++i) {
-        std::string_view value{ argv[i] };
+        std::string_view value { argv[i] };
         bool as_arg = false;
 
         if (value == "-e") {
@@ -58,27 +58,21 @@ int main(int argc, char* argv[])
         }
 
         if (as_arg) {
-            mysql_statement << wing::Statement::Arg(value);
+            statement << wing::Statement::Arg(value);
         } else {
-            mysql_statement << value;
+            statement << value;
         }
     }
 
-    wing::GlobalScopeInitializer wing_gsi{};
-
-    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
-    wing::EventLoop event_loop{ connection };
+    wing::ConnectionInfo connection { hostname, port, user, password, db, 0 };
+    wing::Executor executor { std::move(connection) };
 
     using namespace std::chrono_literals;
-    auto query = event_loop.ProduceQuery(std::move(mysql_statement), 1000ms, on_complete);
+    (void)executor.StartQuery(std::move(statement), 1000ms, on_complete);
 
-    event_loop.StartQuery(std::move(query));
-
-    while (event_loop.ActiveQueryCount() > 0) {
+    while (executor.ActiveQueryCount() > 0) {
         std::this_thread::sleep_for(100ms);
     }
-
-    event_loop.Stop();
 
     return 0;
 }

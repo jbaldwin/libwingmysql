@@ -1,52 +1,51 @@
 #include "wing/QueryHandle.hpp"
-#include "wing/EventLoop.hpp"
 #include "wing/QueryPool.hpp"
 
 namespace wing {
 
 QueryHandle::QueryHandle(
-    std::unique_ptr<Query> query_handle_ptr)
-    : m_query_handle_ptr(std::move(query_handle_ptr))
+    std::unique_ptr<Query> query_ptr)
+    : query_ptr(std::move(query_ptr))
 {
 }
 
 QueryHandle::~QueryHandle()
 {
-    if (m_query_handle_ptr) {
-        QueryPool& query_pool = m_query_handle_ptr->m_query_pool;
-        query_pool.returnQuery(std::move(m_query_handle_ptr));
+    if (query_ptr != nullptr) {
+        QueryPool& query_pool = query_ptr->m_query_pool;
+        query_pool.returnQuery(std::move(query_ptr));
     }
 }
 
 QueryHandle::QueryHandle(QueryHandle&& from)
-    : m_query_handle_ptr(std::move(from.m_query_handle_ptr))
+    : query_ptr(std::move(from.query_ptr))
 {
 }
 
 auto QueryHandle::operator=(QueryHandle&& from) noexcept -> QueryHandle&
 {
-    m_query_handle_ptr = std::move(from.m_query_handle_ptr);
+    query_ptr = std::move(from.query_ptr);
     return *this;
 }
 
 auto QueryHandle::operator*() -> Query&
 {
-    return *m_query_handle_ptr;
+    return *query_ptr;
 }
 
 auto QueryHandle::operator*() const -> const Query&
 {
-    return *m_query_handle_ptr;
+    return *query_ptr;
 }
 
 auto QueryHandle::operator-> () -> Query*
 {
-    return m_query_handle_ptr.get();
+    return query_ptr.get();
 }
 
 auto QueryHandle::operator-> () const -> const Query*
 {
-    return m_query_handle_ptr.get();
+    return query_ptr.get();
 }
 
 } // wing

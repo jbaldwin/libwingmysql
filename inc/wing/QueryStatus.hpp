@@ -7,6 +7,8 @@ namespace wing {
 enum class QueryStatus {
     /// The query is currently being built.
     BUILDING,
+    /// Creating the query failed, possibly malformed or invalid.
+    INVALID,
     /// The query is currently executing.
     EXECUTING,
     /// The query completed successfully.
@@ -22,9 +24,7 @@ enum class QueryStatus {
     /// The query timed out.
     TIMEOUT,
     /// The MySQL server disconnected.
-    DISCONNECT,
-    /// The event loop is shutting down.
-    SHUTDOWN_IN_PROGRESS
+    DISCONNECT
 };
 
 /**

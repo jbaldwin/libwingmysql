@@ -1,21 +1,6 @@
 #include "wing/QueryPool.hpp"
-#include "wing/EventLoop.hpp"
 
 namespace wing {
-
-QueryPool::QueryPool(
-    ConnectionInfo connection)
-    : m_connection(std::move(connection))
-{
-}
-
-QueryPool::QueryPool(
-    ConnectionInfo connection,
-    EventLoop* event_loop)
-    : m_connection(std::move(connection))
-    , m_event_loop(event_loop)
-{
-}
 
 QueryPool::~QueryPool()
 {
@@ -41,7 +26,6 @@ auto QueryPool::Produce(
             // Calling new instead of std::make_unique since the ctor is private
             std::unique_ptr<Query>(
                 new Query(
-                    m_event_loop,
                     *this,
                     m_connection,
                     std::move(on_complete),
@@ -52,12 +36,19 @@ auto QueryPool::Produce(
         m_queries.pop_back();
         m_lock.unlock();
 
-        request_handle_ptr->OnCompleteHandler(std::move(on_complete));
-        request_handle_ptr->Timeout(timeout);
-        request_handle_ptr->Statement(std::move(statement));
+        request_handle_ptr->m_on_complete = std::move(on_complete);
+        request_handle_ptr->m_timeout = timeout;
+        request_handle_ptr->timeout();
+        request_handle_ptr->m_statement = std::move(statement);
 
         return QueryHandle(std::move(request_handle_ptr));
     }
+}
+
+QueryPool::QueryPool(
+    ConnectionInfo connection)
+    : m_connection(std::move(connection))
+{
 }
 
 auto QueryPool::returnQuery(
@@ -72,7 +63,7 @@ auto QueryPool::returnQuery(
     }
 
     {
-        query_handle_ptr->Reset();
+        query_handle_ptr->reset();
         std::lock_guard<std::mutex> guard(m_lock);
         m_queries.emplace_back(std::move(query_handle_ptr));
     }
