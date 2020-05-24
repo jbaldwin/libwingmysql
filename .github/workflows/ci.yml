@@ -35,7 +35,6 @@ jobs:
                         g++-9 \
                         clang-9 \
                         zlib1g-dev \
-                        libuv1-dev \
                         libssl-dev \
                         libmysqlclient-dev \
                         netcat
@@ -45,7 +44,6 @@ jobs:
                     cd build-release-g++
                     cmake \
                         -GNinja \
-                        -DWING_MYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
                         -DCMAKE_BUILD_TYPE=Release \
                         -DCMAKE_C_COMPILER=gcc-9 \
                         -DCMAKE_CXX_COMPILER=g++-9 \
@@ -57,7 +55,6 @@ jobs:
                     cd build-release-clang
                     cmake \
                         -GNinja \
-                        -DWING_MYSQL_CLIENT_LIB:STRING=libmysqlclient.so \
                         -DCMAKE_BUILD_TYPE=Release \
                         -DCMAKE_C_COMPILER=clang-9 \
                         -DCMAKE_CXX_COMPILER=clang++-9 \
@@ -109,7 +106,6 @@ jobs:
                         g++ \
                         clang \
                         zlib-devel \
-                        libuv-devel \
                         openssl-devel \
                         mysql-devel \
                         nc

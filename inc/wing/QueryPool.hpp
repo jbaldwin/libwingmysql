@@ -12,22 +12,14 @@
 
 namespace wing {
 
-class EventLoop;
+class Executor;
 
 class QueryPool {
-    friend EventLoop;
+    friend Executor;
     friend QueryHandle;
 
 public:
     ~QueryPool();
-
-    /**
-     * Creates a query pool for running synchronous requests.
-     * Queries created from this pool *CANNOT* be used in an EventLoop.
-     *
-     * @param connection The MySQL Server connection information.
-     */
-    explicit QueryPool(ConnectionInfo connection);
 
     QueryPool(const QueryPool&) = delete;
     QueryPool(QueryPool&&) = delete;
@@ -64,12 +56,16 @@ public:
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
-    EventLoop* m_event_loop{ nullptr };
     std::deque<std::unique_ptr<Query>> m_queries;
 
+    /**
+     * Creates a query pool for running synchronous requests.
+     * Queries created from this pool *CANNOT* be used in an EventLoop.
+     *
+     * @param connection The MySQL Server connection information.
+     */
     explicit QueryPool(
-        ConnectionInfo connection,
-        EventLoop* event_loop);
+        ConnectionInfo connection);
 
     auto returnQuery(
         std::unique_ptr<Query> query_handle_ptr) -> void;

@@ -33,36 +33,22 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::string hostname(argv[1]);
+    std::string hostname { argv[1] };
     uint16_t port = static_cast<uint16_t>(std::stoi(argv[2]));
-    std::string user(argv[3]);
-    std::string password(argv[4]);
-    std::string db(argv[5]);
-    wing::Statement mysql_statement;
-    mysql_statement << argv[6];
+    std::string user { argv[3] };
+    std::string password { argv[4] };
+    std::string db { argv[5] };
+    wing::Statement statement;
+    statement << argv[6];
 
-    wing::GlobalScopeInitializer wing_gsi{};
+    wing::ConnectionInfo connection { hostname, port, user, password, db, 0 };
 
-    wing::ConnectionInfo connection(hostname, port, user, password, db, 0);
-    wing::EventLoop event_loop(connection);
+    // Execute two queries asynchronously on the same executor.
+    wing::Executor executor { std::move(connection), 2 };
 
     using namespace std::chrono_literals;
-    auto request = event_loop.ProduceQuery(mysql_statement, 1000ms, on_complete);
-    event_loop.StartQuery(std::move(request));
-
-    std::this_thread::sleep_for(250ms);
-    while (event_loop.ActiveQueryCount() > 0) {
-        std::this_thread::sleep_for(100ms);
-    }
-
-    request = event_loop.ProduceQuery(mysql_statement, 1000ms, on_complete);
-    event_loop.StartQuery(std::move(request));
-    std::this_thread::sleep_for(250ms);
-    while (event_loop.ActiveQueryCount() > 0) {
-        std::this_thread::sleep_for(100ms);
-    }
-
-    event_loop.Stop();
+    (void)executor.StartQuery(statement, 1000ms, on_complete);
+    (void)executor.StartQuery(statement, 1000ms, on_complete);
 
     return 0;
 }

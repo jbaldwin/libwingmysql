@@ -2,17 +2,19 @@
 
 namespace wing {
 
-const std::string QUERY_STATUS_UNKNOWN = "UNKNOWN";
-const std::string QUERY_STATUS_BUILDING = "BUILDING";
-const std::string QUERY_STATUS_EXECUTING = "EXECUTING";
-const std::string QUERY_STATUS_CONNECT_FAILURE = "CONNECT_FAILURE";
-const std::string QUERY_STATUS_SUCCESS = "SUCCESS";
-const std::string QUERY_STATUS_WRITE_FAILURE = "WRITE_FAILURE";
-const std::string QUERY_STATUS_READ_FAILURE = "READ_FAILURE";
-const std::string QUERY_STATUS_STORE_FAILURE = "STORE_FAILURE";
-const std::string QUERY_STATUS_TIMEOUT = "TIMEOUT";
-const std::string QUERY_STATUS_DISCONNECT = "DISCONNECT";
-const std::string QUERY_STATUS_SHUTDOWN_IN_PROGRESS = "SHUTDOWN_IN_PROGRESS";
+using namespace std::string_literals;
+
+const std::string QUERY_STATUS_UNKNOWN = "UNKNOWN"s;
+const std::string QUERY_STATUS_INVALID = "INVALID"s;
+const std::string QUERY_STATUS_BUILDING = "BUILDING"s;
+const std::string QUERY_STATUS_EXECUTING = "EXECUTING"s;
+const std::string QUERY_STATUS_CONNECT_FAILURE = "CONNECT_FAILURE"s;
+const std::string QUERY_STATUS_SUCCESS = "SUCCESS"s;
+const std::string QUERY_STATUS_WRITE_FAILURE = "WRITE_FAILURE"s;
+const std::string QUERY_STATUS_READ_FAILURE = "READ_FAILURE"s;
+const std::string QUERY_STATUS_STORE_FAILURE = "STORE_FAILURE"s;
+const std::string QUERY_STATUS_TIMEOUT = "TIMEOUT"s;
+const std::string QUERY_STATUS_DISCONNECT = "DISCONNECT"s;
 
 auto to_string(
     QueryStatus status) -> const std::string&
@@ -20,6 +22,8 @@ auto to_string(
     switch (status) {
     case QueryStatus::BUILDING:
         return QUERY_STATUS_BUILDING;
+    case QueryStatus::INVALID:
+        return QUERY_STATUS_INVALID;
     case QueryStatus::EXECUTING:
         return QUERY_STATUS_EXECUTING;
     case QueryStatus::SUCCESS:
@@ -36,8 +40,6 @@ auto to_string(
         return QUERY_STATUS_TIMEOUT;
     case QueryStatus::DISCONNECT:
         return QUERY_STATUS_DISCONNECT;
-    case QueryStatus::SHUTDOWN_IN_PROGRESS:
-        return QUERY_STATUS_SHUTDOWN_IN_PROGRESS;
     default:
         return QUERY_STATUS_UNKNOWN;
     }

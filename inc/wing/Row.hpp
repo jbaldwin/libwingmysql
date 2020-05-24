@@ -32,6 +32,11 @@ public:
     auto Column(
         size_t idx) const -> const Value& { return m_values.at(idx); }
 
+    /**
+     * @return The column values for this row.
+     */
+    auto Columns() const -> const std::vector<Value>& { return m_values; }
+
 private:
     Row(
         MYSQL_ROW mysql_row,

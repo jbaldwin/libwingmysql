@@ -13,7 +13,7 @@ namespace wing {
  */
 class QueryHandle {
     friend class QueryPool;
-    friend class EventLoop;
+    friend class Executor;
 
 public:
     ~QueryHandle();
@@ -34,9 +34,9 @@ public:
     /** @} */
 private:
     explicit QueryHandle(
-        std::unique_ptr<Query> query_handle_ptr);
+        std::unique_ptr<Query> query_ptr);
 
-    std::unique_ptr<Query> m_query_handle_ptr;
+    std::unique_ptr<Query> query_ptr;
 };
 
 } // wing
