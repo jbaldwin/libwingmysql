@@ -5,42 +5,38 @@
 
 namespace wing {
 
+std::atomic<uint64_t> Worker::g_worker_idx { 0 };
+
 Worker::Worker(
     std::thread thread)
     : m_thread(std::move(thread))
 {
 }
 
-std::atomic<uint64_t> Executor::g_mysql_initialized { 0 };
-std::mutex Executor::g_mysql_library_init_mutex {};
-
 Executor::Executor(
     ConnectionInfo connection_info,
     std::size_t num_workers)
     : m_query_pool(std::move(connection_info))
 {
-    {
-        // always grab lock so threads don't start before globally init'ed
-        std::lock_guard<std::mutex> g { g_mysql_library_init_mutex };
-        // If this thread is the first call init.
-        if (g_mysql_initialized.fetch_add(1) == 0) {
-            mysql_library_init(0, nullptr, nullptr);
-        }
-    }
-
     if (num_workers == 0) {
         num_workers = 1;
     }
+
+    if (num_workers > 1024) {
+        num_workers = 1024;
+    }
+
+    m_workers.reserve(num_workers);
 
     for (std::size_t i = 0; i < num_workers; ++i) {
         m_workers.emplace_back(
             Worker { std::thread {
                 [this, i]() {
-                    mysql_thread_init();
                     executor(i);
-                    mysql_thread_end();
                 } } });
     }
+
+    m_start = true;
 }
 
 Executor::~Executor()
@@ -50,14 +46,6 @@ Executor::~Executor()
     // if there are multiple executors then mysql library won't be cleaned up yet.
     for (auto& worker : m_workers) {
         worker.m_thread.join();
-    }
-
-    {
-        std::lock_guard<std::mutex> g { g_mysql_library_init_mutex };
-        // If this is the last call end.
-        if (g_mysql_initialized.fetch_sub(-1) == 1) {
-            mysql_library_end();
-        }
     }
 }
 
@@ -115,11 +103,19 @@ auto Executor::executor(
     using namespace std::chrono_literals;
 
     {
+        // Wait for all child executor threads to be setup before continuing.
+        while (m_start == false) {
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(10ms);
+        }
+
         auto& worker = m_workers[worker_index];
         worker.m_tid = syscall(SYS_gettid);
         // std::thread.native_handle() seems to be buggy?  Revert to using pthread_self().
         worker.m_native_handle = pthread_self();
     }
+
+    mysql_thread_init();
 
     while (!m_stop) {
         // Wait until there are queries ready to execute or this execution context is being stopped.
@@ -151,6 +147,8 @@ auto Executor::executor(
             }
         }
     }
+
+    mysql_thread_end();
 }
 
 } // namespace wing

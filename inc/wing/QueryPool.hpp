@@ -53,6 +53,18 @@ public:
         std::chrono::milliseconds timeout,
         std::function<void(QueryHandle)> on_complete) -> QueryHandle;
 
+    auto size() -> std::size_t
+    {
+        std::lock_guard<std::mutex> guard { m_lock };
+        return m_queries.size();
+    }
+
+    auto clear() -> void
+    {
+        std::lock_guard<std::mutex> guard { m_lock };
+        m_queries.clear();
+    }
+
 private:
     std::mutex m_lock;
     ConnectionInfo m_connection;
