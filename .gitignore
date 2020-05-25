@@ -7,6 +7,9 @@
 /RelWithDebInfo/
 /Release/
 /build/
+/build-debug-g++/
+/build-release-g++/
+/build-release-clang/
 
 /bin/
 /lib/

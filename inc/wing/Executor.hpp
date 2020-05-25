@@ -21,31 +21,40 @@ public:
     Worker(const Worker&) = delete;
     Worker(Worker&&) = default;
     auto operator=(const Worker&) -> Worker& = delete;
-    auto operator=(Worker &&) -> Worker& = default;
+    auto operator=(Worker &&) -> Worker& = delete;
 
     ~Worker() = default;
+
+    /**
+     * @return A sequentially increasing worker index to uniquely identify this worker, this is unique
+     *         even across Executor instances.
+     */
+    [[nodiscard]] auto WorkerIndex() const -> std::size_t { return m_worker_idx; }
 
     /**
      * Gets the worker's native thread id.  This will only be available after the worker thread
      * has started up.
      * @return std::thread::native_handle_type for the worker thread.
      */
-    [[nodiscard]] auto NativeThreadHandle() const -> const std::optional<pid_t>& { return m_tid; }
+    [[nodiscard]] auto NativeThreadHandle() const -> const std::optional<std::thread::native_handle_type>& { return m_native_handle; }
 
     /**
      * Gets the worker's operating system thread id.  This will only be available after the worker
      * thread has started up.
      * @return gettid()
      */
-    [[nodiscard]] auto OperatingSystemThreadId() const -> const std::optional<std::thread::native_handle_type>& { return m_native_handle; }
+    [[nodiscard]] auto OperatingSystemThreadId() const -> const std::optional<pid_t>& { return m_tid; }
 
 private:
     Worker(
         std::thread thread);
 
+    static std::atomic<uint64_t> g_worker_idx;
+
     std::thread m_thread;
-    std::optional<pid_t> m_tid;
+    const std::uint64_t m_worker_idx { ++g_worker_idx };
     std::optional<std::thread::native_handle_type> m_native_handle;
+    std::optional<pid_t> m_tid;
 };
 
 class Executor {
@@ -119,11 +128,9 @@ public:
     auto Workers() const -> const std::vector<Worker>& { return m_workers; }
 
 private:
-    static std::atomic<uint64_t> g_mysql_initialized;
-    static std::mutex g_mysql_library_init_mutex;
-
     QueryPool m_query_pool;
 
+    std::atomic<bool> m_start { false };
     std::atomic<bool> m_stop { false };
     std::atomic<uint64_t> m_active_query_count { 0 };
 

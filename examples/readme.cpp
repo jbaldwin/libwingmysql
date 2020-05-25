@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <wing/WingMySQL.hpp>
 
 int main(int argc, char* argv[])
@@ -10,6 +9,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    wing::GlobalScopeInitializer wing_gsi {};
+
     // Create connection information to the mysql database.
     wing::ConnectionInfo connection {
         argv[1],
@@ -17,7 +18,8 @@ int main(int argc, char* argv[])
         argv[3],
         argv[4],
         argv[5],
-        0 };
+        0
+    };
 
     // Create a statement, normally this would have wing::Statement::Arg()
     // around parameters that should be bound, this is a simple example.

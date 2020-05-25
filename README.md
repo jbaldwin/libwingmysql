@@ -2,6 +2,7 @@ libwingmysql - Safe Easy to use C++17 MySQL Client Library
 ==========================================================
 
 [![CI](https://github.com/jbaldwin/libwingmysql/workflows/build-release-test/badge.svg)](https://github.com/jbaldwin/libwingmysql/workflows/build-release-test/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/jbaldwin/libwingmysql/badge.svg?branch=master)](https://coveralls.io/github/jbaldwin/libwingmysql?branch=master)
 [![language][badge.language]][language]
 [![license][badge.license]][license]
 
@@ -27,21 +28,6 @@ https://github.com/jbaldwin/libwingmysql
 
 # Usage #
 
-## Requirements
-    C++17 compiler (g++/clang++)
-    CMake
-    make and/or ninja
-    pthreads
-    zlib devel
-    mysqlclient devel
-
-## Instructions
-
-### Building
-    mkdir Release && cd Release
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    cmake --build .
-
 # Examples
 
 See all of the examples under the examples/ directory.
@@ -49,7 +35,6 @@ See all of the examples under the examples/ directory.
 ### Simple Synchronous Query
 ```C++
 #include <iostream>
-
 #include <wing/WingMySQL.hpp>
 
 int main(int argc, char* argv[])
@@ -60,13 +45,16 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    wing::GlobalScopeInitializer wing_gsi{};
+
     // Create connection information to the mysql database.
     wing::ConnectionInfo connection {
         argv[1],
         static_cast<uint16_t>(std::stoi(argv[2])),
         argv[3],
         argv[4],
-        argv[5], 0 };
+        argv[5],
+        0 };
 
     // Create a statement, normally this would have wing::Statement::Arg()
     // around parameters that should be bound, this is a simple example.
@@ -87,10 +75,9 @@ int main(int argc, char* argv[])
     if (query_handle->QueryStatus() == wing::QueryStatus::SUCCESS) {
         std::cout << "Fields count: " << query_handle->FieldCount() << "\n";
         std::cout << "Row count: " << query_handle->RowCount() << "\n";
-        for (size_t row_idx = 0; row_idx < query_handle->RowCount(); ++row_idx) {
-            auto& row = query_handle->Row(row_idx);
-            for (size_t col_idx = 0; col_idx < row.ColumnCount(); ++col_idx) {
-                auto& value = row.Column(col_idx);
+
+        for (const auto& row : query_handle->Rows()) {
+            for (const auto& value : row.Columns()) {
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
@@ -105,7 +92,6 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
 ```
 
 ### Creating a statement with escaped parameters
@@ -120,6 +106,84 @@ using Arg = wing::Statement::Arg;
 wing::Statement statement {};
 statement << "SELECT column FROM DATABASE WHERE name like " << Arg(to_be_escaped) << " AND id = " << Arg(i_wont_be_escaped);
 ```
+
+## Requirements
+    C++17 compiler
+        g++-9
+        clang-9
+    CMake
+    make or ninja
+    pthreads
+    zlib-devel
+    mysqlclient-devel
+
+    Test on:
+        ubuntu:18.04
+        ubuntu:20.04
+        fedora:31
+
+## Instructions
+
+### Building
+    # This will produce a static library to link against your project.
+    mkdir Release && cd Release
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+    cmake --build .
+
+### CMake Projects
+CMake options:
+
+    WING_BUILD_EXAMPLES                  "Build the examples. Default=ON"
+    WING_BUILD_TESTS                     "Build the tests. Default=ON"
+    WING_CODE_COVERAGE                   "Enable code coverage, tests must also be enabled. Default=OFF"
+    WING_MYSQL_OPT_SSL_ENFORCE_DISABLED  "Disable MySQL option SSL enforce. Default=OFF"
+    WING_PERCONA_SSL_DISABLED            "Disable Percona MySQL SSL. Default=OFF"
+    WING_LINK_LIBRARIES                  "User specified additinoal link targets for custom mysql libraries, defaults to system 'mysqlclient'."
+
+#### add_subdirectory()
+To use within your cmake project you can clone the project or use git submodules and then `add_subdirectory` in the paren project's `CMakeLists.txt`, assuming the wing code is in a `libwingmysql/` subdirectory of the parent project:
+
+    add_subdirectory(libwingmysql)
+
+To link to the `<project_name>` then use the following:
+
+    add_executable(<project_name> main.cpp)
+    target_link_libraries(<project_name> PUBLIC wingmysql)
+
+Include wing in the project's code by simply including `#include <wing/WingMySQL.hpp>` as needed.
+
+#### FetchContent
+CMake can also include the project directly via a `FetchContent` declaration.  In your project's `CMakeLists.txt`
+include the following code to download the git repository and make it available to link to.
+
+    cmake_minimum_required(VERSION 3.11)
+
+    # ... cmake project stuff ...
+
+    include(FetchContent)
+    FetchContent_Declare(
+        wingmysql
+        GIT_REPOSITORY https://github.com/jbaldwin/libwingmysql.git
+        GIT_TAG        <TAG_OR_GIT_HASH>
+    )
+    FetchContent_MakeAvailable(wingmysql)
+
+    # ... cmake project more stuff ...
+
+    target_link_libraries(${PROJECT_NAME} PUBLIC wingmysql)
+
+### Running Tests
+The tests are automatically run by GitHub Actions on all Pull Requests.  They can also be ran locally with a default
+localhost instance of `mysql`.  To do so the CMake option `WING_LOCALHOST_TESTS=ON` must be set otherwise the tests will use the hostname `mysql` setup in the CI settings.  After building and starting `mysql` tests can be run by issuing:
+
+    # Invoke via cmake:
+    ctest -v
+
+    # Or invoke directly to see error messages if tests are failing:
+    ./test/libwingmysql_tests
+
+## Benchmarks
+...TODO...
 
 ## Support
 

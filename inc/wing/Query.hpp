@@ -84,6 +84,9 @@ private:
      */
     auto reset() -> void;
 
+    /**
+     * Internally sets the timeout for the query.
+     */
     auto timeout() -> void;
 
     /**
