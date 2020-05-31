@@ -69,14 +69,6 @@ public:
     auto operator<<(
         Arg parameter) -> Statement&;
 
-    /**
-     * Some statements do not have results, e.g. CREATE TABLE.  By setting this Wing MySQL
-     * will set appropriate results on queries.
-     * @param expect Should this statement expect to have a result with rows returned?
-     */
-    auto ExpectResult(
-        bool expect) -> void { m_expect_result = expect; }
-
 private:
     /**
      * Internal struct, similar to Arg but does not perform conversion and does
@@ -96,8 +88,6 @@ private:
 
     /// All parts of the statement, bound or otherwise
     std::vector<StatementPart> m_statement_parts;
-    /// Should this query expect results?  Some queries like CREATE TABLE do not.
-    bool m_expect_result { true };
 
     /**
      * Prepares a final string statement for use in MySQL by escaping all bound

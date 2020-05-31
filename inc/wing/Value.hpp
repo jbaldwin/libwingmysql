@@ -28,7 +28,7 @@ public:
      * @{
      */
     auto IsNull() const -> bool;
-    auto AsStringView() const -> const std::string_view;
+    auto AsStringView() const -> std::string_view;
     auto AsUInt64() const -> uint64_t;
     auto AsInt64() const -> int64_t;
     auto AsUInt32() const -> uint32_t;

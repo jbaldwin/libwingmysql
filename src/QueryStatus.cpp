@@ -15,6 +15,7 @@ const std::string QUERY_STATUS_READ_FAILURE = "READ_FAILURE"s;
 const std::string QUERY_STATUS_STORE_FAILURE = "STORE_FAILURE"s;
 const std::string QUERY_STATUS_TIMEOUT = "TIMEOUT"s;
 const std::string QUERY_STATUS_DISCONNECT = "DISCONNECT"s;
+const std::string QUERY_STATUS_ERROR = "ERROR"s;
 
 auto to_string(
     QueryStatus status) -> const std::string&
@@ -40,6 +41,8 @@ auto to_string(
         return QUERY_STATUS_TIMEOUT;
     case QueryStatus::DISCONNECT:
         return QUERY_STATUS_DISCONNECT;
+    case QueryStatus::ERROR:
+        return QUERY_STATUS_ERROR;
     default:
         return QUERY_STATUS_UNKNOWN;
     }
