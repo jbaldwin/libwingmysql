@@ -50,12 +50,18 @@ public:
     auto Error() const -> std::optional<std::string>;
 
     /**
+     * @return Returns the error message, or the default_msg if there is no error.
+     */
+    auto ErrorOr(
+        std::string default_msg) -> std::string;
+
+    /**
      * @return The number of fields returned from the query.
      */
     auto FieldCount() const -> size_t;
 
     /**
-     * @return The number of rows returned from the query.
+     * @return The number of rows returned from the query or the number of affected rows by the query.
      */
     auto RowCount() const -> size_t;
 
@@ -70,6 +76,11 @@ public:
      * @return The query result's rows.
      */
     auto Rows() const -> const std::vector<wing::Row>& { return m_rows; }
+
+    /**
+     * @return The last insert ID from this query.
+     */
+    auto LastInsertId() -> uint64_t { return mysql_insert_id(&m_mysql); }
 
 private:
     Query(

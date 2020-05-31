@@ -34,6 +34,13 @@ auto Query::Error() const -> std::optional<std::string>
     }
 }
 
+auto Query::ErrorOr(
+    std::string default_msg) -> std::string
+{
+    auto error = Error();
+    return error.has_value() ? error.value() : std::move(default_msg);
+}
+
 auto Query::FieldCount() const -> size_t
 {
     return m_field_count;
@@ -133,25 +140,26 @@ auto Query::execute() -> wing::QueryStatus
     }
 
     if (0 == mysql_real_query(&m_mysql, m_final_statement.c_str(), m_final_statement.length())) {
-        if (m_statement.m_expect_result) {
-            m_result = mysql_store_result(&m_mysql);
-            if (m_result != nullptr) {
+        m_result = mysql_store_result(&m_mysql);
+        if (m_result != nullptr) {
+            m_query_status = QueryStatus::SUCCESS;
+            m_field_count = mysql_num_fields(m_result);
+            m_row_count = mysql_num_rows(m_result);
+            parseRows();
+        } else {
+            // Use this function to determine if the query should have returned values
+            if (mysql_field_count(&m_mysql) == 0) {
                 m_query_status = QueryStatus::SUCCESS;
-                m_field_count = mysql_num_fields(m_result);
-                m_row_count = mysql_num_rows(m_result);
-                parseRows();
+                m_field_count = 0;
+                m_row_count = mysql_affected_rows(&m_mysql);
+                m_parsed_result = true;
             } else {
-                m_query_status = QueryStatus::STORE_FAILURE;
+                m_query_status = QueryStatus::ERROR;
                 m_had_error = true;
             }
-        } else {
-            m_query_status = QueryStatus::SUCCESS;
-            m_field_count = 0;
-            m_row_count = 0;
-            m_parsed_result = true;
         }
     } else {
-        m_query_status = QueryStatus::TIMEOUT;
+        m_query_status = QueryStatus::ERROR;
         m_had_error = true;
     }
     return m_query_status;

@@ -24,7 +24,9 @@ enum class QueryStatus {
     /// The query timed out.
     TIMEOUT,
     /// The MySQL server disconnected.
-    DISCONNECT
+    DISCONNECT,
+    /// Generic error, check the error string for more information.
+    ERROR
 };
 
 /**
