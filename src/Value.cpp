@@ -20,116 +20,158 @@ auto Value::AsStringView() const -> std::string_view
     return m_data;
 }
 
-auto Value::AsUInt64() const -> uint64_t
+auto Value::AsUInt64() const -> std::optional<uint64_t>
 {
-    uint64_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = std::stoul(std::string(m_data));
+        return std::stoul(std::string(m_data));
     } catch (...) {
     }
 
-    return value;
+    return std::nullopt;
 }
 
-auto Value::AsInt64() const -> int64_t
+auto Value::AsInt64() const -> std::optional<int64_t>
 {
-    int64_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = std::stol(std::string(m_data));
+        return std::stol(std::string(m_data));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsUInt32() const -> uint32_t
+auto Value::AsUInt32() const -> std::optional<uint32_t>
 {
-    uint32_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = static_cast<uint32_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint32_t>(std::stoul(std::string(m_data)));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsInt32() const -> int32_t
+auto Value::AsInt32() const -> std::optional<int32_t>
 {
-    int32_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = std::stoi(std::string(m_data));
+        return std::stoi(std::string(m_data));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsUInt16() const -> uint16_t
+auto Value::AsUInt16() const -> std::optional<uint16_t>
 {
-    uint16_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = static_cast<uint16_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint16_t>(std::stoul(std::string(m_data)));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsInt16() const -> int16_t
+auto Value::AsInt16() const -> std::optional<int16_t>
 {
-    int16_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = static_cast<int16_t>(std::stoi(std::string(m_data)));
+        return static_cast<int16_t>(std::stoi(std::string(m_data)));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsUInt8() const -> uint8_t
+auto Value::AsUInt8() const -> std::optional<uint8_t>
 {
-    uint8_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = static_cast<uint8_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint8_t>(std::stoul(std::string(m_data)));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsInt8() const -> int8_t
+auto Value::AsInt8() const -> std::optional<int8_t>
 {
-    int8_t value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = static_cast<int8_t>(std::stoi(std::string(m_data)));
+        return static_cast<int8_t>(std::stoi(std::string(m_data)));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsBool() const -> bool
+auto Value::AsBool() const -> std::optional<bool>
 {
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        int64_t value = std::stol(std::string(m_data));
-        return (value != 0);
+        return (std::stol(std::string(m_data)) != 0);
     } catch (...) {
     }
 
-    return false;
+    return std::nullopt;
 }
 
-auto Value::AsFloat() const -> float
+auto Value::AsFloat() const -> std::optional<float>
 {
-    float value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = std::stof(std::string(m_data));
+        return std::stof(std::string(m_data));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
-auto Value::AsDouble() const -> double
+auto Value::AsDouble() const -> std::optional<double>
 {
-    double value = 0;
+    if (IsNull()) {
+        return std::nullopt;
+    }
+
     try {
-        value = std::stod(std::string(m_data));
+        return std::stod(std::string(m_data));
     } catch (...) {
     }
-    return value;
+
+    return std::nullopt;
 }
 
 } // wing

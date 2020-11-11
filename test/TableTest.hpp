@@ -57,8 +57,12 @@ TEST_CASE("Insert and select tiny int.")
     REQUIRE(select_query->RowCount() == 1);
     const auto& rows = select_query->Rows();
     const auto& values = rows[0].Columns();
-    REQUIRE(values[0].AsInt8() == -128);
-    REQUIRE(values[1].AsUInt8() == 5);
+
+    REQUIRE(values[0].AsInt8().has_value());
+    REQUIRE(values[0].AsInt8().value() == -128);
+    
+    REQUIRE(values[1].AsUInt8().has_value());
+    REQUIRE(values[1].AsUInt8().value() == 5);
 
     REQUIRE(values[0].AsStringView() == "-128");
     REQUIRE(values[1].AsStringView() == "5");
@@ -85,8 +89,11 @@ TEST_CASE("Insert and select small int.")
     REQUIRE(select_query->RowCount() == 1);
     const auto& rows = select_query->Rows();
     const auto& values = rows[0].Columns();
-    REQUIRE(values[0].AsInt16() == -32768);
-    REQUIRE(values[1].AsUInt16() == 32768);
+
+    REQUIRE(values[0].AsInt16().has_value());
+    REQUIRE(values[0].AsInt16().value() == -32768);
+    REQUIRE(values[1].AsUInt16().has_value());
+    REQUIRE(values[1].AsUInt16().value() == 32768);
 
     REQUIRE(values[0].AsStringView() == "-32768");
     REQUIRE(values[1].AsStringView() == "32768");
@@ -113,8 +120,12 @@ TEST_CASE("Insert and select medium int.")
     REQUIRE(select_query->RowCount() == 1);
     const auto& rows = select_query->Rows();
     const auto& values = rows[0].Columns();
-    REQUIRE(values[0].AsInt32() == -8388608);
-    REQUIRE(values[1].AsUInt32() == 8388608);
+
+    REQUIRE(values[0].AsInt32().has_value());
+    REQUIRE(values[0].AsInt32().value() == -8388608);
+
+    REQUIRE(values[1].AsUInt32().has_value());
+    REQUIRE(values[1].AsUInt32().value() == 8388608);
 
     REQUIRE(values[0].AsStringView() == "-8388608");
     REQUIRE(values[1].AsStringView() == "8388608");
@@ -141,7 +152,10 @@ TEST_CASE("Insert and select int.")
     REQUIRE(select_query->RowCount() == 1);
     const auto& rows = select_query->Rows();
     const auto& values = rows[0].Columns();
+    
+    REQUIRE(values[0].AsInt32().has_value());
     REQUIRE(values[0].AsInt32() == -2147483648);
+    REQUIRE(values[1].AsUInt32().has_value());
     REQUIRE(values[1].AsUInt32() == 2147483648);
 
     REQUIRE(values[0].AsStringView() == "-2147483648");
@@ -169,8 +183,11 @@ TEST_CASE("Insert and select bigint.")
     REQUIRE(select_query->RowCount() == 1);
     const auto& rows = select_query->Rows();
     const auto& values = rows[0].Columns();
-    REQUIRE(values[0].AsInt64() == -9223372036854775807);
-    REQUIRE(values[1].AsUInt64() == 9223372036854775807);
+
+    REQUIRE(values[0].AsInt64().has_value());
+    REQUIRE(values[0].AsInt64().value() == -9223372036854775807);
+    REQUIRE(values[1].AsInt64().has_value());
+    REQUIRE(values[1].AsUInt64().value() == 9223372036854775807);
 
     REQUIRE(values[0].AsStringView() == "-9223372036854775807");
     REQUIRE(values[1].AsStringView() == "9223372036854775807");
