@@ -219,7 +219,7 @@ TEST_CASE("Test Null Insert")
     REQUIRE(values[1].AsInt64().has_value());
 }
 
-TEST_CASE("Test Null Insert")
+TEST_CASE("Test Throw Returns un-engaged optional")
 {
     using namespace std::chrono_literals;
     wing::ConnectionInfo connection { MYSQL_HOSTNAME, MYSQL_PORT, MYSQL_USERNAME, MYSQL_PASSWORD };
