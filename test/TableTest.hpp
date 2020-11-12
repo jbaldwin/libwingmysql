@@ -43,14 +43,14 @@ TEST_CASE("Insert and select tiny int.")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (t, ut) VALUES (-128, 5)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (t, ut) VALUES (-128, 5)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT t, ut FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT t, ut FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -75,14 +75,14 @@ TEST_CASE("Insert and select small int.")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (s, us) VALUES (-32768, 32768)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (s, us) VALUES (-32768, 32768)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT s, us FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT s, us FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -106,14 +106,14 @@ TEST_CASE("Insert and select medium int.")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (m, um) VALUES (-8388608, 8388608)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (m, um) VALUES (-8388608, 8388608)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT m, um FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT m, um FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -138,14 +138,14 @@ TEST_CASE("Insert and select int.")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (i, ui) VALUES (-2147483648, 2147483648)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (i, ui) VALUES (-2147483648, 2147483648)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT i, ui FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT i, ui FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -169,14 +169,14 @@ TEST_CASE("Insert and select bigint.")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (b, ub) VALUES (-9223372036854775807, 9223372036854775807)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (b, ub) VALUES (-9223372036854775807, 9223372036854775807)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT b, ub FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT b, ub FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -200,14 +200,14 @@ TEST_CASE("Test Null Insert")
     wing::Executor executor { std::move(connection) };
 
     wing::Statement insert_stm {};
-    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".integers (b, ub) VALUES (NULL, 1515151515)";
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (b, ub) VALUES (NULL, 1515151515)";
     auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
     query_print_error(insert_query);
     REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
     REQUIRE(insert_query->RowCount() == 1);
 
     wing::Statement select_stm {};
-    select_stm << "SELECT b, ub FROM " << MYSQL_DATABASE << ".integers WHERE id = " << insert_query->LastInsertId();
+    select_stm << "SELECT b, ub FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
     auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
     query_print_error(select_query);
     REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
@@ -217,4 +217,41 @@ TEST_CASE("Test Null Insert")
 
     REQUIRE_FALSE(values[0].AsInt64().has_value());
     REQUIRE(values[1].AsInt64().has_value());
+}
+
+TEST_CASE("Test Null Insert")
+{
+    using namespace std::chrono_literals;
+    wing::ConnectionInfo connection { MYSQL_HOSTNAME, MYSQL_PORT, MYSQL_USERNAME, MYSQL_PASSWORD };
+    wing::Executor executor { std::move(connection) };
+
+    wing::Statement insert_stm {};
+    insert_stm << "INSERT INTO " << MYSQL_DATABASE << ".intergers_and_char (vc) VALUES ('TESTING')";
+    auto insert_query = executor.StartQuery(std::move(insert_stm), 10s).value().get();
+    query_print_error(insert_query);
+    REQUIRE(insert_query->QueryStatus() == wing::QueryStatus::SUCCESS);
+    REQUIRE(insert_query->RowCount() == 1);
+
+    wing::Statement select_stm {};
+    select_stm << "SELECT vc FROM " << MYSQL_DATABASE << ".intergers_and_char WHERE id = " << insert_query->LastInsertId();
+    auto select_query = executor.StartQuery(std::move(select_stm), 10s).value().get();
+    query_print_error(select_query);
+    
+    REQUIRE(select_query->QueryStatus() == wing::QueryStatus::SUCCESS);
+    REQUIRE(select_query->RowCount() == 1);
+
+    const auto& rows = select_query->Rows();
+    const auto& values = rows[0].Columns();
+
+    REQUIRE_FALSE(values[0].AsInt64().has_value());
+    REQUIRE_FALSE(values[0].AsUInt64().has_value());
+    REQUIRE_FALSE(values[0].AsInt32().has_value());
+    REQUIRE_FALSE(values[0].AsUInt32().has_value());
+    REQUIRE_FALSE(values[0].AsInt16().has_value());
+    REQUIRE_FALSE(values[0].AsUInt16().has_value());
+    REQUIRE_FALSE(values[0].AsInt8().has_value());
+    REQUIRE_FALSE(values[0].AsUInt8().has_value());
+    REQUIRE_FALSE(values[0].AsBool().has_value());
+    REQUIRE_FALSE(values[0].AsDouble().has_value());
+    REQUIRE_FALSE(values[0].AsFloat().has_value());
 }

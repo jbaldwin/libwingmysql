@@ -65,7 +65,7 @@ struct TestSetupInfo {
         wing::Statement create_table_stm {};
         // clang-format off
         create_table_stm
-            << "CREATE TABLE " << MYSQL_DATABASE << ".integers (\n"
+            << "CREATE TABLE " << MYSQL_DATABASE << ".integers_and_char (\n"
             << "id INT UNSIGNED NOT NULL AUTO_INCREMENT, \n"
             << "t TINYINT, \n"
             << "s SMALLINT, \n"
@@ -77,6 +77,7 @@ struct TestSetupInfo {
             << "um MEDIUMINT UNSIGNED, \n"
             << "ui INT UNSIGNED, \n"
             << "ub BIGINT UNSIGNED, \n"
+            << "vc VARCHAR(10), \n"
             << "PRIMARY KEY (id)\n"
             << ")";
         // clang-format on
