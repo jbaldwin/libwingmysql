@@ -12,7 +12,7 @@ Value::Value(
 
 auto Value::IsNull() const -> bool
 {
-    return m_data.has_value();
+    return !m_data.has_value();
 }
 
 auto Value::AsStringView() const -> std::optional<std::string_view>
