@@ -72,11 +72,11 @@ jobs:
             -   name: test-release-g++
                 run: |
                     cd build-release-g++
-                    ctest -v
+                    ctest -VV
             -   name: test-release-clang
                 run: |
                     cd build-release-clang
-                    ctest -v
+                    ctest -VV
     build-ubuntu-20-04:
         name: ubuntu-20.04
         runs-on: ubuntu-latest
@@ -146,11 +146,11 @@ jobs:
             -   name: test-release-g++
                 run: |
                     cd build-release-g++
-                    ctest -v
+                    ctest -VV
             -   name: test-release-clang
                 run: |
                     cd build-release-clang
-                    ctest -v
+                    ctest -VV
     build-fedora-31:
         name: fedora-31
         runs-on: ubuntu-latest
@@ -226,15 +226,15 @@ jobs:
             -   name: test-release-g++
                 run: |
                     cd build-release-g++
-                    ctest -v
+                    ctest -VV
             -   name: test-release-clang
                 run: |
                     cd build-release-clang
-                    ctest -v
+                    ctest -VV
             -   name: Build coverage info
                 run: |
                     cd build-debug-g++
-                    ctest -v
+                    ctest -VV
                     gcov -o ./test/CMakeFiles/libwingmysql_tests.dir/main.cpp.p ./test/libwingmysql_tests
                     lcov --include "*/inc/wing/*" --include "*/src/*" --exclude "test/*" -o libwingmysql_tests.info -c -d .
             -   name: Coveralls GitHub Action
