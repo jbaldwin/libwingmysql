@@ -14,7 +14,7 @@ static auto print_query_result(const wing::QueryHandle& query) -> void
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
-                    std::cout << value.AsStringView() << " ";
+                    std::cout << value.AsStringView().value() << " ";
                 }
             }
             std::cout << "\n";

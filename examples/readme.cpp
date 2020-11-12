@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
-                    std::cout << value.AsStringView() << " ";
+                    std::cout << value.AsStringView().value() << " ";
                 }
             }
             std::cout << "\n";
