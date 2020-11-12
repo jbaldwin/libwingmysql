@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string_view>
 
 namespace wing {
@@ -28,25 +29,25 @@ public:
      * @{
      */
     auto IsNull() const -> bool;
-    auto AsStringView() const -> std::string_view;
-    auto AsUInt64() const -> uint64_t;
-    auto AsInt64() const -> int64_t;
-    auto AsUInt32() const -> uint32_t;
-    auto AsInt32() const -> int32_t;
-    auto AsUInt16() const -> uint16_t;
-    auto AsInt16() const -> int16_t;
-    auto AsUInt8() const -> uint8_t;
-    auto AsInt8() const -> int8_t;
-    auto AsBool() const -> bool;
-    auto AsFloat() const -> float;
-    auto AsDouble() const -> double;
+    auto AsStringView() const -> std::optional<std::string_view>;
+    auto AsUInt64() const -> std::optional<uint64_t>;
+    auto AsInt64() const -> std::optional<int64_t>;
+    auto AsUInt32() const -> std::optional<uint32_t>;
+    auto AsInt32() const -> std::optional<int32_t>;
+    auto AsUInt16() const -> std::optional<uint16_t>;
+    auto AsInt16() const -> std::optional<int16_t>;
+    auto AsUInt8() const -> std::optional<uint8_t>;
+    auto AsInt8() const -> std::optional<int8_t>;
+    auto AsBool() const -> std::optional<bool>;
+    auto AsFloat() const -> std::optional<float>;
+    auto AsDouble() const -> std::optional<double>;
     /** @} */
 
 private:
     explicit Value(
-        std::string_view data);
+        std::optional<std::string_view> data);
 
-    std::string_view m_data;
+    std::optional<std::string_view> m_data;
 };
 
 } // wing
