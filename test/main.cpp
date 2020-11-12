@@ -32,7 +32,7 @@ struct TestSetupInfo {
     {
         using namespace std::chrono_literals;
         std::vector<std::string> table_names {
-            "integers_and_char"
+            "integers", "string"
         };
 
         std::cout << "MYSQL_HOSTNAME = " << MYSQL_HOSTNAME << "\n";
@@ -63,9 +63,11 @@ struct TestSetupInfo {
         }
 
         wing::Statement create_table_stm {};
+        wing::Statement create_table_stm_varchar {};
+
         // clang-format off
         create_table_stm
-            << "CREATE TABLE " << MYSQL_DATABASE << ".integers_and_char (\n"
+            << "CREATE TABLE " << MYSQL_DATABASE << ".integers (\n"
             << "id INT UNSIGNED NOT NULL AUTO_INCREMENT, \n"
             << "t TINYINT, \n"
             << "s SMALLINT, \n"
@@ -77,12 +79,27 @@ struct TestSetupInfo {
             << "um MEDIUMINT UNSIGNED, \n"
             << "ui INT UNSIGNED, \n"
             << "ub BIGINT UNSIGNED, \n"
-            << "vc VARCHAR(10), \n"
             << "PRIMARY KEY (id)\n"
             << ")";
         // clang-format on
 
         wing::QueryHandle table_result = executor.StartQuery(std::move(create_table_stm), 10s).value().get();
+        if (table_result->Error().has_value()) {
+            std::cerr << "Failed to setup wing_table table: " << table_result->Error().value() << "\n";
+            std::terminate();
+        }
+
+        // clang-format off
+        create_table_stm_varchar
+            << "CREATE TABLE " << MYSQL_DATABASE << ".string (\n"
+            << "id INT UNSIGNED NOT NULL AUTO_INCREMENT, \n"
+            << "vc VARCHAR(4), \n"
+            << "PRIMARY KEY (id)\n"
+            << ")";
+        // clang-format on
+
+        table_result = executor.StartQuery(std::move(create_table_stm_varchar), 10s).value().get();
+
         if (table_result->Error().has_value()) {
             std::cerr << "Failed to setup wing_table table: " << table_result->Error().value() << "\n";
             std::terminate();
