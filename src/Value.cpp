@@ -5,17 +5,17 @@
 namespace wing {
 
 Value::Value(
-    std::string_view data)
+    std::optional<std::string_view> data)
     : m_data(data)
 {
 }
 
 auto Value::IsNull() const -> bool
 {
-    return m_data.empty();
+    return m_data.has_value();
 }
 
-auto Value::AsStringView() const -> std::string_view
+auto Value::AsStringView() const -> std::optional<std::string_view>
 {
     return m_data;
 }
@@ -27,7 +27,7 @@ auto Value::AsUInt64() const -> std::optional<uint64_t>
     }
 
     try {
-        return std::stoul(std::string(m_data));
+        return std::stoul(std::string(m_data.value()));
     } catch (...) {
     }
 
@@ -41,7 +41,7 @@ auto Value::AsInt64() const -> std::optional<int64_t>
     }
 
     try {
-        return std::stol(std::string(m_data));
+        return std::stol(std::string(m_data.value()));
     } catch (...) {
     }
 
@@ -55,7 +55,7 @@ auto Value::AsUInt32() const -> std::optional<uint32_t>
     }
 
     try {
-        return static_cast<uint32_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint32_t>(std::stoul(std::string(m_data.value())));
     } catch (...) {
     }
 
@@ -69,7 +69,7 @@ auto Value::AsInt32() const -> std::optional<int32_t>
     }
 
     try {
-        return std::stoi(std::string(m_data));
+        return std::stoi(std::string(m_data.value()));
     } catch (...) {
     }
 
@@ -83,7 +83,7 @@ auto Value::AsUInt16() const -> std::optional<uint16_t>
     }
 
     try {
-        return static_cast<uint16_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint16_t>(std::stoul(std::string(m_data.value())));
     } catch (...) {
     }
 
@@ -97,7 +97,7 @@ auto Value::AsInt16() const -> std::optional<int16_t>
     }
 
     try {
-        return static_cast<int16_t>(std::stoi(std::string(m_data)));
+        return static_cast<int16_t>(std::stoi(std::string(m_data.value())));
     } catch (...) {
     }
 
@@ -111,7 +111,7 @@ auto Value::AsUInt8() const -> std::optional<uint8_t>
     }
 
     try {
-        return static_cast<uint8_t>(std::stoul(std::string(m_data)));
+        return static_cast<uint8_t>(std::stoul(std::string(m_data.value())));
     } catch (...) {
     }
 
@@ -125,7 +125,7 @@ auto Value::AsInt8() const -> std::optional<int8_t>
     }
 
     try {
-        return static_cast<int8_t>(std::stoi(std::string(m_data)));
+        return static_cast<int8_t>(std::stoi(std::string(m_data.value())));
     } catch (...) {
     }
 
@@ -139,7 +139,7 @@ auto Value::AsBool() const -> std::optional<bool>
     }
 
     try {
-        return (std::stol(std::string(m_data)) != 0);
+        return (std::stol(std::string(m_data.value())) != 0);
     } catch (...) {
     }
 
@@ -153,7 +153,7 @@ auto Value::AsFloat() const -> std::optional<float>
     }
 
     try {
-        return std::stof(std::string(m_data));
+        return std::stof(std::string(m_data.value()));
     } catch (...) {
     }
 
@@ -167,7 +167,7 @@ auto Value::AsDouble() const -> std::optional<double>
     }
 
     try {
-        return std::stod(std::string(m_data));
+        return std::stod(std::string(m_data.value()));
     } catch (...) {
     }
 

@@ -18,7 +18,7 @@ static auto on_complete(wing::QueryHandle request) -> void
                 if (value.IsNull()) {
                     std::cout << "NULL ";
                 } else {
-                    std::cout << value.AsStringView() << " ";
+                    std::cout << value.AsStringView().value() << " ";
                 }
             }
             std::cout << "\n";

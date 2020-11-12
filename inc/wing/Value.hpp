@@ -29,7 +29,7 @@ public:
      * @{
      */
     auto IsNull() const -> bool;
-    auto AsStringView() const -> std::string_view;
+    auto AsStringView() const -> std::optional<std::string_view>;
     auto AsUInt64() const -> std::optional<uint64_t>;
     auto AsInt64() const -> std::optional<int64_t>;
     auto AsUInt32() const -> std::optional<uint32_t>;
@@ -45,9 +45,9 @@ public:
 
 private:
     explicit Value(
-        std::string_view data);
+        std::optional<std::string_view> data);
 
-    std::string_view m_data;
+    std::optional<std::string_view> m_data;
 };
 
 } // wing
