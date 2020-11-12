@@ -1,6 +1,6 @@
 name: build-release-test
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
     build-ubuntu-18-04:
