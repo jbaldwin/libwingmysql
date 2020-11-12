@@ -6,7 +6,7 @@ namespace wing {
 
 Value::Value(
     std::optional<std::string_view> data)
-    : m_data(data)
+    : m_data(std::move(data))
 {
 }
 

@@ -18,7 +18,7 @@ Row::Row(
             auto length = (lengths != nullptr) ? lengths[i] : std::strlen(mysql_value);
             data = std::string_view(mysql_value, length);
         }
-        Value value(data);
+        Value value(std::move(data));
         m_values.emplace_back(value);
     }
 }
