@@ -32,7 +32,7 @@ struct TestSetupInfo {
     {
         using namespace std::chrono_literals;
         std::vector<std::string> table_names {
-            "integers"
+            "integers_and_char"
         };
 
         std::cout << "MYSQL_HOSTNAME = " << MYSQL_HOSTNAME << "\n";
