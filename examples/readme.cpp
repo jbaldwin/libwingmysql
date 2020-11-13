@@ -42,11 +42,12 @@ int main(int argc, char* argv[])
         std::cout << "Row count: " << query_handle->RowCount() << "\n";
 
         for (const auto& row : query_handle->Rows()) {
-            for (const auto& value : row.Columns()) {
-                if (value.IsNull()) {
+            for (const auto& column : row.Columns()) {
+                auto value = column.AsStringView();
+                if (value.has_value()) {
                     std::cout << "NULL ";
                 } else {
-                    std::cout << value.AsStringView().value() << " ";
+                    std::cout << value.value() << " ";
                 }
             }
             std::cout << "\n";
